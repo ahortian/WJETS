@@ -19,12 +19,14 @@
 #include <TGraph.h>
 #include <TGraphAsymmErrors.h>
 #include <TLegend.h>
+#include <TLegendEntry.h>
 #include <TLatex.h>
 #include "getFilesAndHistograms.h"
 
 //-- Setting global variables -------------
 #include "fileNames.h"
 #include "variablesOfInterestVarWidth.h"
+#include "xsecVariableNames.h"
 
 using namespace std;
 //--------------------------------
@@ -33,14 +35,15 @@ using namespace std;
 //--- Declaring functions -------------
 void PlottingEditMeanNJets(int start = 0, int end = -1);
 void FuncPlot(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1);
+
 //void GetSysErrorTable (string variable, string outputTableName, TH1D* dataCenBackUp = NULL, TH1D* hDiffer[] = {NULL}, TH1D* hStatError = NULL, TH1D* hTotalError = NULL, int nGroup = 10);
+
 void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dataCentral = NULL, TH1D* hSyst[] = NULL);
 TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC= NULL, string variable = "ZNGoodJets_Zexc");
 //--------------------------------
 
 
 //--- More global variables -------------
-
 double Luminosity(19.244 * 1000); // for SMu
 bool isMuon = 1;
 string leptonFlavor = "SMu";
@@ -48,7 +51,6 @@ string unfAlg = "Bayes";
 bool doVarWidth = true ;
 //--------------------------------
 const int ZJetsFillStyle = 1001;
-
 
 
 void PlottingEditMeanNJets(int start, int end)
@@ -78,15 +80,12 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     TFile *f  = new TFile(fileName.c_str());
     
     // get cental and gen
-    
-    TH1D *dataCentral       = (TH1D*) f->Get("Central"); // unfolded central (data -BG)
     //TH1D *data              = (TH1D*) f->Get("Data"); // reco data
-    TH1D *data              = (TH1D*) dataCentral->Clone();
+    TH1D *dataCentral       = (TH1D*) f->Get("Central"); // unfolded central (data -BG)
     TH1D *genMad            = (TH1D*) f->Get("genMad");
-    TH1D *dataCentralBackUp = (TH1D*) dataCentral->Clone();
     
     // get unfolded histogram for systematics
-    int nSyst(19);
+    int nSyst(18);
     TH1D *hSyst[19];
     hSyst[0]  = (TH1D*) f->Get("JESup");
     hSyst[1]  = (TH1D*) f->Get("JESdown");
@@ -106,7 +105,11 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     hSyst[15] = (TH1D*) f->Get("WB");
     hSyst[16] = (TH1D*) f->Get("TTBAR");
     hSyst[17] = (TH1D*) f->Get("MC");
-    hSyst[18] = (TH1D*) f->Get("RESP");
+    if (variable.find("ZNGoodJets") == string::npos) {
+        hSyst[18] = (TH1D*) f->Get("RESP");
+        nSyst = 19;
+    }
+    
     
     //--- Get BlackHat ------
     //TH1D *genBhatALL = (TH1D*) f->Get("genBhat");
@@ -124,7 +127,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     string varBlackHatName, varBlackHatName2;
     string varBlackHatName1_1, varBlackHatName1_2, varBlackHatName1_3, varBlackHatName1_4, varBlackHatName1_5;
     string varBlackHatName2_1, varBlackHatName2_2, varBlackHatName2_3, varBlackHatName2_4, varBlackHatName2_5;
-    
     
     //int useBHFile(0);
     if (variable == "MeanNJetsHT_Zinc1jet") {
@@ -247,15 +249,13 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
         genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
         
-        cout << "Stop after line " << __LINE__ << endl;
+        
         genBhatDeno[0] = (TH1D*) genBhatDeno[1]->Clone();
         for (int i = 1; i<= genBhatDeno[1]->GetNbinsX(); i++){
-            cout << "Stop after line " << __LINE__ << endl;
             genBhatDeno[0]->SetBinContent(i,0);
             genBhatDeno[0]->SetBinError(i,0);
         }
         
-        cout << "Stop after line " << __LINE__ << endl;
         int nBinsX(genBhatDeno[1]->GetNbinsX());
         double xmin = genBhatDeno[1]->GetXaxis()->GetXmin();
         double xmax = genBhatDeno[1]->GetXaxis()->GetXmax();
@@ -273,16 +273,13 @@ void FuncPlot(string variable, bool logZ, bool decrease)
             genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 4, 0.5, 4.5);
         }
         
-        cout << "Stop after line " << __LINE__ << endl;
         for (int j = 1; j<= 4; j++){
             for (int i = 1; i<= nBinsX; i++){
                 genBhat2D->SetBinContent(i, j, genBhatDeno[j-1]->GetBinContent(i));
                 genBhat2D->SetBinError(i, j, genBhatDeno[j-1]->GetBinError(i));
             }
         }
-        cout << "Stop after line " << __LINE__ << endl;
         genBHMeanJ = computeProject1DMeanNJets(genBhat2D, variable);
-        cout << "Stop after line " << __LINE__ << endl;
     }
     
     
@@ -327,13 +324,18 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     TH1D *genBhatALL = (TH1D*) genBHMeanJ->Clone();
     //--- End Get BlackHat ------
     
-    
-    //--- Get Sherpa ------
+    //------ Get Sherpa ------
+    //-- for getting Sherpa2
     TH1D *genShe = (TH1D*) f->Get("genShe");
+    
+    //--- End Get Sherpa2 ------
     
     // print out integral value for testing
     const int nBins(dataCentral->GetNbinsX());
     cout << " central integral:  " << variable << "   " << dataCentral->Integral(1, nBins) << " with under/over:  " << dataCentral->Integral(0, nBins+1) << endl;
+    cout << " sherpa integral:  " << variable << "   " << genShe->Integral(1, nBins) << " with under/over:  " << dataCentral->Integral(0, nBins+1) << endl;
+    
+    cout << "nSyst" << nSyst << endl;
     for (int syst(0); syst < nSyst; syst++) {
         double tempScale = hSyst[syst]->Integral(1, nBins) ;
         cout << " original integral for " << syst << " : " << tempScale << endl;
@@ -360,7 +362,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         totalSystematicsUp += pow( pow((1.+effSF), 2) - 1 , 2);
         totalSystematicsDown += pow( pow((1.+effSF), 2) - 1 , 2);
         
-        for(int i = 0; i< 12; i++) {
+        for(int i = 0; i < 12; i++) {
             // contribution from JES PU Xsec JER LepSF Btag MES
             if (i <= 6) {
                 double diffFromUp(hSyst[2*i]->GetBinContent(bin) - centralValue);
@@ -410,23 +412,17 @@ void FuncPlot(string variable, bool logZ, bool decrease)
             }
             // contribution from Resp hSyst[18] = (TH1D*) f->Get("RESP");
             if (i == 11) {
-                double difference(hSyst[18]->GetBinContent(bin) - centralValue);
-                totalSystematicsUp += difference * difference;
-                totalSystematicsDown += difference * difference;
+                if (variable.find("ZNGoodJets") == string::npos){
+                    double difference(hSyst[18]->GetBinContent(bin) - centralValue);
+                    totalSystematicsUp += difference * difference;
+                    totalSystematicsDown += difference * difference;
+                }
             }
         }
         
         // contribution from integrated lumi = 2.6%
         totalSystematicsUp += pow( ((2.6/100.0) * centralValue), 2 );
         totalSystematicsDown += pow( ((2.6/100.0) * centralValue), 2 );
-        
-        
-        // contribution from Toy Resp (MC)
-            // (what written in the file is the absolute error value in "counts", so we need the dataCentralBackUp for normalization to xsec) => this is not true for meanNjets >> I do not need this step anymore >> FIXME
-        //hErrorFromToyResponse->SetBinContent( bin, ((hErrorFromToyResponse->GetBinContent(bin))/(dataCentralBackUp->GetBinContent(bin))) * centralValue );
-        //totalSystematicsUp += pow( hErrorFromToyResponse->GetBinContent(bin)  ,  2);
-        //totalSystematicsDown += pow( hErrorFromToyResponse->GetBinContent(bin)  ,  2);
-        
         
         
         //--- Set up for systematic plot on pad 1
@@ -440,6 +436,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         ySystDown[bin-1]   = sqrt(totalStatistics * totalStatistics + totalSystematicsDown );
     }
     cout << " finished uncertainty computation " << endl;
+    cout << "line th " << __LINE__ << endl;
     
     //--- Set up for systematic plot on pad 1
     TGraphAsymmErrors *grCentralSyst = new TGraphAsymmErrors(nBins, xCoor, yCoor, xErr, xErr, ySystDown, ySystUp);
@@ -475,7 +472,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     }
     else if (variable == "MeanNJetsHT_Zinc2jet"){
         tempXTitle = "H_{T}(jets) [GeV]";
-        RyMin = 1.9;
+        RyMin = 1.8;
         RyMax = 4.2;
     }
     else if (variable == "MeanNJetsdRapidity_Zinc2jet"){
@@ -485,8 +482,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     }
     else if (variable == "MeanNJetsdRapidityFB_Zinc2jet"){
         tempXTitle = "#Delta y(j_{F}j_{B})";
-        RyMin = 1.9;
-        RyMax = 3.2;
+        RyMin = 1.7;
+        RyMax = 3.3;
     }
     
     
@@ -495,7 +492,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     //if (hisUnfolded->GetMaximum() > MineYMax) MineYMax = hisUnfolded->GetMaximum();
     
     hisUnfolded->SetTitle("");
-    if (variable.find("ZNGood") != string::npos) {
+    if (variable.find("ZNGoodJets") != string::npos) {
         hisUnfolded->GetXaxis()->SetRange(2, 8);
     }
     hisUnfolded->GetYaxis()->SetTitle(temp.c_str());
@@ -505,7 +502,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     hisUnfolded->GetYaxis()->SetRangeUser(RyMin, RyMax);
     //hisUnfolded->SetMaximum(MineYMax*1.2);
     //hisUnfolded->SetMinimum(MineYMin*0.8);
-    cout << "Stop after line " << __LINE__ << endl;
+    
     
     hisUnfolded->SetFillStyle(3354);
     hisUnfolded->SetFillColor(12);
@@ -515,7 +512,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     hisUnfolded->SetMarkerStyle(20);
     hisUnfolded->SetMarkerSize(0.8);
     hisUnfolded->Draw("E1");
-    cout << "Stop after line " << __LINE__ << endl;
     
     grCentralSyst->SetFillStyle(3354);
     grCentralSyst->SetFillColor(12);
@@ -523,33 +519,33 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     
     genMad->SetFillStyle(ZJetsFillStyle);
     genMad->SetFillColor(kBlue-10);
+    //genMad->SetFillColorAlpha(kBlue-10, 0.60);
     genMad->SetLineColor(kBlue);
     genMad->SetLineWidth(2);
     genMad->SetMarkerColor(kBlue);
     genMad->SetMarkerStyle(24);
-    genMad->Draw("E2 same");
+    //genMad->Draw("E2 same");
     genMad->Draw("E same");
-    cout << "Stop after line " << __LINE__ << endl;
     
     genBhatALL->SetFillStyle(ZJetsFillStyle);
     genBhatALL->SetFillColor(kOrange-2);
+    //genBhatALL->SetFillColorAlpha(kOrange-2, 0.60);
     genBhatALL->SetLineColor(kOrange+10);
     genBhatALL->SetLineWidth(2);
     genBhatALL->SetMarkerColor(kOrange+10);
     genBhatALL->SetMarkerStyle(25);
-    genBhatALL->Draw("E2 same");
+    //genBhatALL->Draw("E2 same");
     genBhatALL->Draw("E same");
-    cout << "Stop after line " << __LINE__ << endl;
     
     genShe->SetFillStyle(ZJetsFillStyle);
     genShe->SetFillColor(kGreen-8);
+    //genShe->SetFillColorAlpha(kGreen-8, 0.60);
     genShe->SetLineColor(kGreen+3);
     genShe->SetLineWidth(2);
     genShe->SetMarkerColor(kGreen+3);
     genShe->SetMarkerStyle(26);
-    genShe->Draw("E2 same");
+    //genShe->Draw("E2 same");
     genShe->Draw("E same");
-    cout << "Stop after line " << __LINE__ << endl;
     
     pad1->Draw();
     //--- TLegend ---
@@ -568,7 +564,25 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend->AddEntry(genShe, "Sherpa2 Stat. Error", "plef");
     legend->Draw();
     //------------------
-    cout << "Stop after line " << __LINE__ << endl;
+    
+    //--- TLatex stuff ---
+    TLatex *latexLabel = new TLatex();
+    latexLabel->SetNDC();
+    latexLabel->SetTextSize(0.05);
+    latexLabel->SetTextFont(42);
+    latexLabel->SetLineWidth(2);
+    latexLabel->SetTextFont(61);
+    latexLabel->DrawLatex(0.13,0.95,"CMS");
+    latexLabel->SetTextFont(52);
+    latexLabel->DrawLatex(0.20,0.95,"Preliminary");
+    latexLabel->SetTextFont(42);
+    latexLabel->DrawLatex(0.13,0.95-0.045,"19.6 fb^{-1} (8 TeV)");
+    latexLabel->DrawLatex(0.18,0.21-0.05,"anti-k_{T} (R = 0.5) Jets");
+    latexLabel->DrawLatex(0.18,0.21-0.11,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.4 ");
+    latexLabel->DrawLatex(0.18,0.21-0.17,"W#rightarrow #mu#nu channel");
+    latexLabel->SetName("latexLabel");
+    latexLabel->Draw("same");
+    
     
     //--- calculate ratio >> pad2, pad3
     
@@ -621,7 +635,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         //cout << " sherpa " << gen3->GetBinContent(i) << endl;
     }
     
-    //--- Set up for systematic plot on pad 2, 3
+    //--- Set up for systematic plot on pad 1
     double xCoorCenRatio[nBins], yCoorCenRatio[nBins], xErrCenRatio[nBins], ySystDownCenRatio[nBins], ySystUpCenRatio[nBins];
     for (int bin(1); bin <= nBins; bin++) {
         // set x-coordinate and error in x
@@ -672,10 +686,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data1->SetMarkerStyle();
     data1->Draw("E1");
     
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
     gen1->SetFillStyle(ZJetsFillStyle);
     gen1->SetFillColor(kBlue-10);
     gen1->SetLineColor(kBlue);
@@ -685,13 +695,31 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     gen1->Draw("E2 same");
     gen1->Draw("E1 same");
     
-    TLatex *latexLabel = new TLatex();
-    latexLabel->SetTextSize(0.15);
-    latexLabel->SetTextFont(42);
-    latexLabel->SetLineWidth(2);
-    latexLabel->SetTextColor(kAzure-5);
-    latexLabel->SetNDC();
-    latexLabel->DrawLatex(0.15,0.09,"Madgraph");
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
+    
+    TLegend *legend2 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    legend2->SetFillColor(0);
+    legend2->SetFillStyle(ZJetsFillStyle);
+    legend2->SetBorderSize(0);
+    //legend2->SetTextSize(.12);
+    legend2->SetY1(0.07);
+    legend2->SetX1(0.15);
+    legend2->SetY2(0.20);
+    legend2->SetTextSize(0.09);
+    TLegendEntry *leEntry2;
+    leEntry2 = legend2->AddEntry(gen1, "Stat. unc. (gen)", "f");
+    legend2->Draw("same");
+    
+    // Text Madgraph
+    TLatex *latexLabel0 = new TLatex();
+    latexLabel0->SetTextSize(0.15);
+    latexLabel0->SetTextFont(42);
+    latexLabel0->SetLineWidth(2);
+    latexLabel0->SetTextColor(kAzure-5);
+    latexLabel0->SetNDC();
+    latexLabel0->DrawLatex(0.35,0.09,"Madgraph");
     
     pad2->Draw();
     
@@ -725,10 +753,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data2->SetMarkerStyle();
     data2->Draw("E1");
     
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
     gen2->SetFillStyle(ZJetsFillStyle);
     gen2->SetFillColor(kOrange-2);
     gen2->SetLineColor(kOrange+10);
@@ -738,6 +762,23 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     gen2->Draw("E2 same");
     gen2->Draw("E1 same");
     
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
+    
+    TLegend *legend3 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    legend3->SetFillColor(0);
+    legend3->SetFillStyle(ZJetsFillStyle);
+    legend3->SetBorderSize(0);
+    //legend3->SetTextSize(.12);
+    legend3->SetY1(0.07);
+    legend3->SetX1(0.15);
+    legend3->SetY2(0.20);
+    legend3->SetTextSize(0.09);
+    TLegendEntry *leEntry3;
+    leEntry3 = legend3->AddEntry(gen2, "Stat. unc. (gen)", "f");
+    legend3->Draw("same");
+    
     // Text BlackHat
     TLatex *latexLabel1 = new TLatex();
     latexLabel1->SetTextSize(0.15);
@@ -745,7 +786,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     latexLabel1->SetLineWidth(2);
     latexLabel1->SetTextColor(kOrange+2);
     latexLabel1->SetNDC();
-    latexLabel1->DrawLatex(0.15,0.09,"BlackHat");
+    latexLabel1->DrawLatex(0.35,0.09,"BlackHat");
     
     pad3->Draw();
     
@@ -783,10 +824,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data3->SetMarkerStyle();
     data3->Draw("E1");
     
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
     gen3->SetFillStyle(ZJetsFillStyle);
     gen3->SetFillColor(kGreen-8);
     gen3->SetLineColor(kGreen+3);
@@ -796,19 +833,34 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     gen3->Draw("E2 same");
     gen3->Draw("E1 same");
     
-    // Text Sherpa
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
+    
+    TLegend *legend4 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    legend4->SetFillColor(0);
+    legend4->SetFillStyle(ZJetsFillStyle);
+    legend4->SetBorderSize(0);
+    //legend4->SetTextSize(.12);
+    legend4->SetY1(0.32);
+    legend4->SetX1(0.15);
+    legend4->SetY2(0.42);
+    legend4->SetTextSize(0.065);
+    TLegendEntry *leEntry4;
+    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
+    legend4->Draw("same");
+    
+    // Text Sherpa (position not relative to pad4)
     TLatex *latexLabel2 = new TLatex();
     latexLabel2->SetTextSize(0.11);
     latexLabel2->SetTextFont(42);
     latexLabel2->SetLineWidth(2);
     latexLabel2->SetTextColor(kGreen+3);
     latexLabel2->SetNDC();
-    latexLabel2->DrawLatex(0.15,0.35,"Sherpa");
+    latexLabel2->DrawLatex(0.35,0.34,"Sherpa");
     
     pad4->Draw();
-    pad4->cd();
     can->cd();
-    
     
     //// Set output .pdf file in the direcctory "PNGFiles/FinalResults/"
     string command = "mkdir -p PNGFiles/FinalResults" ;
@@ -843,7 +895,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     const int nBins(dataCentral->GetNbinsX());
     
     int group = nGroup -1;
-    if (variable != "ZNGoodJets_Zexc") {
+    if (variable.find("ZNGoodJets") == string::npos) {
         group = nGroup;
     }
     
@@ -998,12 +1050,13 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     
     string titleCan1 = "Systematic Up : " + variable;
     
-    if (variable.find("ZNGood") != string::npos){
+    if (variable.find("ZNGoodJets") != string::npos){
         hUpDiffer[0]->GetXaxis()->SetRange(2, 8);
     }
     hUpDiffer[0]->SetMaximum(1000);
     hUpDiffer[0]->SetMinimum(0.1);
-    hUpDiffer[0]->SetTitle(titleCan1.c_str());
+    //hUpDiffer[0]->SetTitle(titleCan1.c_str());
+    hUpDiffer[0]->SetTitle("");
     hUpDiffer[0]->GetYaxis()->SetTitle("Uncertainty (%)");
     hUpDiffer[0]->GetXaxis()->SetTitle(tempXTitle.c_str());
     
@@ -1068,7 +1121,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     hUpDiffer[11]->SetLineStyle(5);
     hUpDiffer[11]->DrawCopy("HIST same");
     //Resp
-    if (variable != "ZNGoodJets_Zexc") {
+    if (variable.find("ZNGoodJets") == string::npos) {
         hUpDiffer[nGroup-1]->SetLineColor(kYellow);
         hUpDiffer[nGroup-1]->SetLineWidth(3);
         hUpDiffer[nGroup-1]->SetLineStyle(3);
@@ -1100,7 +1153,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     leg->AddEntry(hUpDiffer[9]  , "ttbar"  , "l");
     leg->AddEntry(hUpDiffer[10] , "MC"     , "l");
     leg->AddEntry(hUpDiffer[11] , "Lumi"   , "l");
-    if (variable != "ZNGoodJets_Zexc") {
+    if (variable.find("ZNGoodJets") == string::npos) {
         leg->AddEntry(hUpDiffer[nGroup-1]  , "Resp", "l");
     }
     leg->AddEntry(hStatError    , "Statistical", "l");
@@ -1110,7 +1163,6 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     string outputFileNameErrorUpPNG = outputDirectory + variable + "ErrorUp.pdf";
     canvas1->Print(outputFileNameErrorUpPNG.c_str());
     
-    
     // canvas2
     TCanvas* canvas2 = new TCanvas("c2", "canvas2", 900, 900);
     canvas2->cd();
@@ -1119,12 +1171,13 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     
     string titleCan2 = "Systematic Down : " + variable;
     
-    if (variable.find("ZNGood") != string::npos){
+    if (variable.find("ZNGoodJets") != string::npos){
         hDownDiffer[0]->GetXaxis()->SetRange(2, 8);
     }
     hDownDiffer[0]->SetMaximum(1000);
     hDownDiffer[0]->SetMinimum(0.1);
-    hDownDiffer[0]->SetTitle(titleCan2.c_str());
+    //hDownDiffer[0]->SetTitle(titleCan2.c_str());
+    hDownDiffer[0]->SetTitle("");
     hDownDiffer[0]->GetYaxis()->SetTitle("Uncertainty (%)");
     hDownDiffer[0]->GetXaxis()->SetTitle(tempXTitle.c_str());
     
@@ -1189,7 +1242,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     hDownDiffer[11]->SetLineStyle(5);
     hDownDiffer[11]->DrawCopy("HIST same");
     //Resp
-    if (variable != "ZNGoodJets_Zexc") {
+    if (variable.find("ZNGoodJets") == string::npos) {
         hDownDiffer[nGroup-1]->SetLineColor(kYellow);
         hDownDiffer[nGroup-1]->SetLineWidth(3);
         hDownDiffer[nGroup-1]->SetLineStyle(3);
@@ -1222,7 +1275,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     leg2->AddEntry(hDownDiffer[10] , "MC"     , "l");
     leg2->AddEntry(hDownDiffer[11] , "Lumi"   , "l");
     
-    if (variable != "ZNGoodJets_Zexc") {
+    if (variable.find("ZNGoodJets") == string::npos) {
         leg2->AddEntry(hDownDiffer[nGroup-1]   , "Resp", "l");
     }
     leg2->AddEntry(hStatError       , "Statistical", "l");

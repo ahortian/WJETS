@@ -35,7 +35,8 @@ ClassImp(ZJetsAndDPS);
 void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSign, bool doInvMassCut, 
         int doBJets, int doPUStudy, bool doFlat, bool useRoch, bool doVarWidth,  bool hasPartonInfo, string pdfSet, int pdfMember)
 {
-
+    RandGen->SetSeed(0); // set random seed
+    
     //--- Initialize PDF from LHAPDF if needed ---
     if (pdfSet != "") {
         LHAPDF::initPDFSet(1, pdfSet.c_str(), pdfMember);
@@ -325,9 +326,13 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             weight *= mcEveWeight_;
             //sumSherpaW += mcSherpaSumWeight3_ ;
         }
-        if (fileName.find("Sherpa2") != string::npos){
+        if (fileName.find("Sherpa2") != string::npos || fileName.find("HEJ") != string::npos){
             weight *= mcSherpaWeights_->at(0);
-            sumSherpaW += mcSherpaWeights_->at(4);
+            
+            if (fileName.find("Sherpa2") != string::npos){
+                sumSherpaW += mcSherpaWeights_->at(4);
+            }
+            
         }
 
         //==========================================================================================================//
@@ -725,7 +730,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
         TLorentzVector leadJ, secondJ, jet1Plus2, jet1Minus2;
         
         //*************************************** begin edit *************************************************************//
-        TLorentzVector newLeadJ, newSecondJ, newThirdJ, newFourthJ;
+        TLorentzVector newLeadJ, newSecondJ, newThirdJ, newFourthJ, newFifthJ;
         double ForwardJetRapidity(0), BackwardJetRapidity(0);
         vector<TLorentzVector> vJetYOrdered;
         //**************************************** end edit **************************************************************//
@@ -1169,7 +1174,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
         TLorentzVector genLeadJ, genSecondJ, genJet1Plus2, genJet1Minus2;
         
         //*************************************** begin edit *************************************************************//
-        TLorentzVector genNewLeadJ, genNewSecondJ, genNewThirdJ, genNewFourthJ;
+        TLorentzVector genNewLeadJ, genNewSecondJ, genNewThirdJ, genNewFourthJ, genNewFifthJ;
         double genForwardJetRapidity(0), genBackwardJetRapidity(0);
         vector<TLorentzVector> genvJetYOrdered;
         //**************************************** end edit **************************************************************//
@@ -1309,6 +1314,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 4){
                 newFourthJ.SetPtEtaPhiE(jets[3].pt, jets[3].eta, jets[3].phi, jets[3].energy);
             }
+            if (nGoodJets >= 5){
+                newFifthJ.SetPtEtaPhiE(jets[4].pt, jets[4].eta, jets[4].phi, jets[4].energy);
+            }
             //**************************************** end edit ************************************************************//
 	        jetsHT = 0;
             for (unsigned short i(0); i < nGoodJets; i++){
@@ -1361,6 +1369,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             }
             if (nGoodGenJets >= 4){
                 genNewFourthJ.SetPtEtaPhiE(genJets[3].pt, genJets[3].eta, genJets[3].phi, genJets[3].energy);
+            }
+            if (nGoodGenJets >= 5){
+                genNewFifthJ.SetPtEtaPhiE(genJets[4].pt, genJets[4].eta, genJets[4].phi, genJets[4].energy);
             }
             //**************************************** end edit ************************************************************//
             genJetsHT = 0.;
@@ -1445,10 +1456,12 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     partonX2D->Fill(pdfInfo_->at(2),pdfInfo_->at(3),genWeight);
                 }
                 GENnEventsIncl0Jets++;
+               
                 genZNGoodJets_Zexc->Fill(nGoodGenJets, genWeight);
                 genZNGoodJetsFull_Zexc->Fill(nGoodGenJets, genWeight);
                 genZNGoodJets_Zinc->Fill(0., genWeight);
                 genZNGoodJetsFull_Zinc->Fill(0., genWeight);
+                
                 genZMass_Zinc0jet->Fill(genZ.M(), genWeight);
                 genZPt_Zinc0jet->Fill(genZ.Pt(), genWeight);
                 genZRapidity_Zinc0jet->Fill(genZ.Rapidity(), genWeight);
@@ -1459,10 +1472,30 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     genlepPt_Zinc0jet->Fill(genLep2.Pt(), genWeight);
                     genlepEta_Zinc0jet->Fill(genLep2.Eta(), genWeight);
                 }
+                
                 if (nGoodGenJets >= 1){
                     GENnEventsIncl1Jets++;
                     genZNGoodJets_Zinc->Fill(1., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(1., genWeight);
+                    genFirstJetPt_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
+                    genFirstJetPt_1_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
+                    genFirstJetPt_2_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
+                    genFirstJetEta_Zinc1jet->Fill(fabs(genLeadJ.Eta()), genWeight);
+                    genFirstJetEta_2_Zinc1jet->Fill(fabs(genLeadJ.Eta()), genWeight);
+                    genJetsHT_Zinc1jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc1jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_2_Zinc1jet->Fill(genJetsHT, genWeight);
+                    //*************************************** begin edit *************************************************************//
+                    gendPhiLepJet1_Zinc1jet->Fill(deltaPhi(genLep1, genNewLeadJ), genWeight);
+                    gendPhiLepJet1_2_Zinc1jet->Fill(deltaPhi(genLep1, genNewLeadJ), genWeight);
+                    
+                    genMeanNJetsHT_1D_Zinc1jet->Fill(genJetsHT, genWeight*nGoodGenJets);
+                    genMeanNJetsHT_Zinc1jet->Fill(genJetsHT, nGoodGenJets, genWeight);
+                    //---
+                    genFirstJetRapidity_Zinc1jet->Fill(fabs(genNewLeadJ.Rapidity()), genWeight);
+                    genFirstJetRapidityFull_Zinc1jet->Fill(genNewLeadJ.Rapidity(), genWeight);
+                    //*************************************** end edit ***************************************************************//
+                    
                     genZMass_Zinc1jet->Fill(genZ.M(), genWeight);
                     genlepPt_Zinc1jet->Fill(genLep1.Pt(), genWeight);
                     genlepEta_Zinc1jet->Fill(genLep1.Eta(), genWeight);
@@ -1473,23 +1506,8 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     genZPt_Zinc1jet->Fill(genZ.Pt(), genWeight);
                     genZRapidity_Zinc1jet->Fill(genZ.Rapidity(), genWeight);
                     genZEta_Zinc1jet->Fill(genZ.Eta(), genWeight);
-                    genFirstJetPt_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
-                    genFirstJetPt_1_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
-                    genFirstJetPt_2_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
-                    
-                    genFirstJetEta_Zinc1jet->Fill(fabs(genLeadJ.Eta()), genWeight);
-                    genFirstJetEta_2_Zinc1jet->Fill(fabs(genLeadJ.Eta()), genWeight);
-                    //*************************************** begin edit *************************************************************//
-                    genFirstJetRapidity_Zinc1jet->Fill(fabs(genNewLeadJ.Rapidity()), genWeight);
-                    genFirstJetRapidityFull_Zinc1jet->Fill(genNewLeadJ.Rapidity(), genWeight);
-                    genMeanNJetsHT_1D_Zinc1jet->Fill(genJetsHT, genWeight*nGoodGenJets);
-                    genMeanNJetsHT_Zinc1jet->Fill(genJetsHT, nGoodGenJets, genWeight);
-                    //*************************************** end edit ***************************************************************//
                     genFirstJetPtEta_Zinc1jet->Fill(genLeadJ.Pt(), fabs(genLeadJ.Eta()), genWeight);
                     genFirstHighestJetPt_Zinc1jet->Fill(genLeadJ.Pt(), genWeight);
-                    genJetsHT_Zinc1jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc1jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_2_Zinc1jet->Fill(genJetsHT, genWeight);
                     
                     for ( int i =0 ; i < NbinsEta2D - 1 ; i++){
                         if ( fabs(genLeadJ.Eta()) >= j_Y_range[i] &&  fabs(genLeadJ.Eta()) < j_Y_range[i+1] )                                genFirstJetPt_Zinc1jet_Eta[i]->Fill(fabs(genLeadJ.Pt()), genWeight);
@@ -1507,8 +1525,53 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 if (nGoodGenJets >= 2){
                     TLorentzVector genJet1Plus2PlusZ = genJet1Plus2 + genZ;
                     GENnEventsIncl2Jets++;
+                    
                     genZNGoodJets_Zinc->Fill(2., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(2., genWeight);
+                    genSecondJetPt_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
+                    genSecondJetPt_1_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
+                    genSecondJetPt_2_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
+                    genSecondJetEta_Zinc2jet->Fill(fabs(genSecondJ.Eta()), genWeight);
+                    genSecondJetEta_2_Zinc2jet->Fill(fabs(genSecondJ.Eta()), genWeight);
+                    genJetsHT_Zinc2jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc2jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_2_Zinc2jet->Fill(genJetsHT, genWeight);
+                    //*************************************** begin edit *******************************************************//
+                    gendRapidityJets_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
+                    gendRapidityJets_2_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
+                    
+                    gendRapidityJetsFB_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
+                    gendRapidityJetsFB_2_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
+                    
+                    gendPhiJets_Zinc2jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    gendPhiJets_2_Zinc2jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    
+                    gendPhiJetsFB_Zinc2jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
+                    gendPhiJetsFB_2_Zinc2jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
+                    
+                    gendiJetMass_Zinc2jet->Fill(genJet1Plus2.M(), genWeight);
+                    gendiJetMass_2_Zinc2jet->Fill(genJet1Plus2.M(), genWeight);
+                    
+                    gendRJets_Zinc2jet->Fill(deltaRYPhi(genNewLeadJ, genNewSecondJ), genWeight);
+                    gendRJets_2_Zinc2jet->Fill(deltaRYPhi(genNewLeadJ, genNewSecondJ), genWeight);
+                    
+                    gendiJetPt_Zinc2jet->Fill(genJet1Plus2.Pt(), genWeight);
+                    gendiJetPt_2_Zinc2jet->Fill(genJet1Plus2.Pt(), genWeight);
+                    
+                    gendPhiLepJet2_Zinc2jet->Fill(deltaPhi(genLep1, genNewSecondJ), genWeight);
+                    gendPhiLepJet2_2_Zinc2jet->Fill(deltaPhi(genLep1, genNewSecondJ), genWeight);
+                    
+                    genMeanNJetsHT_Zinc2jet->Fill(genJetsHT, nGoodGenJets, genWeight);
+                    genMeanNJetsdRapidity_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), nGoodGenJets, genWeight);
+                    genMeanNJetsdRapidityFB_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, nGoodGenJets, genWeight);
+                    //---
+                    genSecondJetRapidity_Zinc2jet->Fill(fabs(genNewSecondJ.Rapidity()), genWeight);
+                    genSecondJetRapidityFull_Zinc2jet->Fill(genNewSecondJ.Rapidity(), genWeight);
+                    genMeanNJetsHT_1D_Zinc2jet->Fill(genJetsHT, genWeight*nGoodGenJets);
+                    genMeanNJetsdRapidity_1D_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight*nGoodGenJets);
+                    genMeanNJetsdRapidityFB_1D_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight*nGoodGenJets);
+                    //*************************************** end edit *********************************************************//
+                    
                     genZMass_Zinc2jet->Fill(genZ.M(), genWeight);
                     genTwoJetsPtDiff_Zinc2jet->Fill(genJet1Minus2.Pt(), genWeight);
                     genBestTwoJetsPtDiff_Zinc2jet->Fill(genBestJet1Minus2.Pt(), genWeight);
@@ -1524,52 +1587,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     genZEta_Zinc2jet->Fill(genZ.Eta(), genWeight);
                     genFirstHighestJetPt_Zinc2jet->Fill(genLeadJ.Pt(), genWeight);
                     genSecondHighestJetPt_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
-                    genSecondJetPt_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
-                    genSecondJetPt_1_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
-                    genSecondJetPt_2_Zinc2jet->Fill(genSecondJ.Pt(), genWeight);
-                    
-                    genSecondJetEta_Zinc2jet->Fill(fabs(genSecondJ.Eta()), genWeight);
-                    genSecondJetEta_2_Zinc2jet->Fill(fabs(genSecondJ.Eta()), genWeight);
-                    //*************************************** begin edit *******************************************************//
-                    genSecondJetRapidity_Zinc2jet->Fill(fabs(genNewSecondJ.Rapidity()), genWeight);
-                    genSecondJetRapidityFull_Zinc2jet->Fill(genNewSecondJ.Rapidity(), genWeight);
-                    gendRapidityJets_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
-                    gendRapidityJets_2_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
-                    
-                    gendRapidityJetsFB_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
-                    gendRapidityJetsFB_2_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
-                    
-                    gendiJetMass_Zinc2jet->Fill(genJet1Plus2.M(), genWeight);
-                    gendiJetMass_2_Zinc2jet->Fill(genJet1Plus2.M(), genWeight);
-                    
-                    gendPhiJetsFB_Zinc2jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
-                    gendPhiJetsFB_2_Zinc2jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
-                    
-                    gendRJets_Zinc2jet->Fill(deltaRYPhi(genNewLeadJ, genNewSecondJ), genWeight);
-                    gendRJets_2_Zinc2jet->Fill(deltaRYPhi(genNewLeadJ, genNewSecondJ), genWeight);
-                    
-                    gendiJetPt_Zinc2jet->Fill(genJet1Plus2.Pt(), genWeight);
-                    gendiJetPt_2_Zinc2jet->Fill(genJet1Plus2.Pt(), genWeight);
-                    
-                    genMeanNJetsHT_1D_Zinc2jet->Fill(genJetsHT, genWeight*nGoodGenJets);
-                    genMeanNJetsdRapidity_1D_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight*nGoodGenJets);
-                    genMeanNJetsdRapidityFB_1D_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight*nGoodGenJets);
-                    
-                    genMeanNJetsHT_Zinc2jet->Fill(genJetsHT, nGoodGenJets, genWeight);
-                    genMeanNJetsdRapidity_Zinc2jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), nGoodGenJets, genWeight);
-                    genMeanNJetsdRapidityFB_Zinc2jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, nGoodGenJets, genWeight);
-                    //*************************************** end edit *********************************************************//
                     genSecondJetPtEta_Zinc2jet->Fill(genSecondJ.Pt(), fabs(genSecondJ.Eta()), genWeight);
                     genRatioJetPt21_Zinc2jet->Fill(genJets[1].pt/genJets[0].pt, genWeight);
-                    genJetsHT_Zinc2jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc2jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_2_Zinc2jet->Fill(genJetsHT, genWeight);
-                    
                     genptBal_Zinc2jet->Fill(genJet1Plus2PlusZ.Pt(), genWeight);
-                    
-                    gendPhiJets_Zinc2jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
-                    gendPhiJets_2_Zinc2jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
-                    
                     genBestdPhiJets_Zinc2jet->Fill(deltaPhi(genBestTwoJets.first, genBestTwoJets.second), genWeight);
                     gendEtaJets_Zinc2jet->Fill(genLeadJ.Eta() - genSecondJ.Eta(), genWeight);
                     gendEtaFirstJetZ_Zinc2jet->Fill(genLeadJ.Eta() - genZ.Eta(), genWeight);
@@ -1589,8 +1609,6 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     for ( int i =0 ; i < NbinsEta2D - 1 ; i++){
                         if ( fabs(genSecondJ.Eta()) >= j_Y_range[i] &&  fabs(genSecondJ.Eta()) < j_Y_range[i+1] )                                                genSecondJetPt_Zinc2jet_Eta[i]->Fill(fabs(genSecondJ.Pt()), genWeight);
                     }
-
-
                     //--- START EWK ---
                     if (passesGenEWKJetPt){
                         // met histos
@@ -1760,7 +1778,6 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                             genSPhi_HighPt_Zexc2jet->Fill(SPhi(genLep1, genLep2, genLeadJ, genSecondJ), genWeight);
                         }
                     }
-
                     if (hasPartonInfo){
                         if (genDPSAndItsJets.size() == 2) {
                             if ((deltaR(genDPSAndItsJets[0].first, genLeadJ) < 0.5 || deltaR(genDPSAndItsJets[0].first, genSecondJ) < 0.5) 
@@ -1795,19 +1812,15 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     GENnEventsIncl3Jets++;
                     genZNGoodJets_Zinc->Fill(3., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(3., genWeight);
-                    genZMass_Zinc3jet->Fill(genZ.M(), genWeight);
-                    genZPt_Zinc3jet->Fill(genZ.Pt(), genWeight);
-                    genZRapidity_Zinc3jet->Fill(genZ.Rapidity(), genWeight);
-                    genZEta_Zinc3jet->Fill(genZ.Eta(), genWeight);
                     genThirdJetPt_Zinc3jet->Fill(genJets[2].pt, genWeight);
                     genThirdJetPt_1_Zinc3jet->Fill(genJets[2].pt, genWeight);
                     genThirdJetPt_2_Zinc3jet->Fill(genJets[2].pt, genWeight);
-                    
                     genThirdJetEta_Zinc3jet->Fill(fabs(genJets[2].eta), genWeight);
                     genThirdJetEta_2_Zinc3jet->Fill(fabs(genJets[2].eta), genWeight);
+                    genJetsHT_Zinc3jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc3jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_2_Zinc3jet->Fill(genJetsHT, genWeight);
                     //*************************************** begin edit *************************************************************//
-                    genThirdJetRapidity_Zinc3jet->Fill(fabs(genNewThirdJ.Rapidity()), genWeight);
-                    genThirdJetRapidityFull_Zinc3jet->Fill(genNewThirdJ.Rapidity(), genWeight);
                     gendRapidityJets_Zinc3jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
                     gendRapidityJets_2_Zinc3jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
                     
@@ -1820,93 +1833,132 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                     gendRapidityJetsFB_Zinc3jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
                     gendRapidityJetsFB_2_Zinc3jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
                     
+                    gendPhiJets_Zinc3jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    gendPhiJets_2_Zinc3jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    
+                    gendPhiJetsFB_Zinc3jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
+                    gendPhiJetsFB_2_Zinc3jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
+                    
                     gendiJetMass_Zinc3jet->Fill(genJet1Plus2.M(), genWeight);
                     gendiJetMass_2_Zinc3jet->Fill(genJet1Plus2.M(), genWeight);
                     
                     gendiJetPt_Zinc3jet->Fill(genJet1Plus2.Pt(), genWeight);
                     gendiJetPt_2_Zinc3jet->Fill(genJet1Plus2.Pt(), genWeight);
+                    
+                    gendPhiLepJet3_Zinc3jet->Fill(deltaPhi(genLep1, genNewThirdJ), genWeight);
+                    gendPhiLepJet3_2_Zinc3jet->Fill(deltaPhi(genLep1, genNewThirdJ), genWeight);
+                    //---
+                    genThirdJetRapidity_Zinc3jet->Fill(fabs(genNewThirdJ.Rapidity()), genWeight);
+                    genThirdJetRapidityFull_Zinc3jet->Fill(genNewThirdJ.Rapidity(), genWeight);
                     //*************************************** end edit ***************************************************************//
+                    
+                    genZMass_Zinc3jet->Fill(genZ.M(), genWeight);
+                    genZPt_Zinc3jet->Fill(genZ.Pt(), genWeight);
+                    genZRapidity_Zinc3jet->Fill(genZ.Rapidity(), genWeight);
+                    genZEta_Zinc3jet->Fill(genZ.Eta(), genWeight);
                     genThirdJetPtEta_Zinc3jet->Fill(genJets[2].pt, fabs(genJets[2].eta), genWeight);
                     genRatioJetPt32_Zinc3jet->Fill(genJets[2].pt/genJets[1].pt, genWeight);
                     genFirstHighestJetPt_Zinc3jet->Fill(genJets[0].pt, genWeight);
                     genSecondHighestJetPt_Zinc3jet->Fill(genJets[1].pt, genWeight);
                     genThirdHighestJetPt_Zinc3jet->Fill(genJets[2].pt, genWeight);
-                    genJetsHT_Zinc3jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc3jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_2_Zinc3jet->Fill(genJetsHT, genWeight);
+                    
                     
                 }
                 if (nGoodGenJets >= 4){
                     genZNGoodJets_Zinc->Fill(4., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(4., genWeight);
-                    genZMass_Zinc4jet->Fill(genZ.M(), genWeight);
-                    genZPt_Zinc4jet->Fill(genZ.Pt(), genWeight);
-                    genZRapidity_Zinc4jet->Fill(genZ.Rapidity(), genWeight);
-                    genZEta_Zinc4jet->Fill(genZ.Eta(), genWeight);
                     genFourthJetPt_Zinc4jet->Fill(genJets[3].pt, genWeight);
                     genFourthJetPt_1_Zinc4jet->Fill(genJets[3].pt, genWeight);
                     genFourthJetPt_2_Zinc4jet->Fill(genJets[3].pt, genWeight);
                     genFourthJetEta_Zinc4jet->Fill(fabs(genJets[3].eta), genWeight);
                     genFourthJetEta_2_Zinc4jet->Fill(fabs(genJets[3].eta), genWeight);
+                    genJetsHT_Zinc4jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc4jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_2_Zinc4jet->Fill(genJetsHT, genWeight);
                     //*************************************** begin edit *************************************************************//
-                    genFourthJetRapidity_Zinc4jet->Fill(fabs(genNewFourthJ.Rapidity()), genWeight);
-                    genFourthJetRapidityFull_Zinc4jet->Fill(genNewFourthJ.Rapidity(), genWeight);
                     gendRapidityJets_Zinc4jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
                     gendRapidityJets_2_Zinc4jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), genWeight);
                     
+                    gendRapidityJets_First_Third_Zinc4jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), genWeight);
+                    gendRapidityJets_2_First_Third_Zinc4jet->Fill(fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), genWeight);
+                    
+                    gendRapidityJets_Second_Third_Zinc4jet->Fill(fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), genWeight);
+                    gendRapidityJets_2_Second_Third_Zinc4jet->Fill(fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), genWeight);
+                    
                     gendRapidityJetsFB_Zinc4jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
                     gendRapidityJetsFB_2_Zinc4jet->Fill(genForwardJetRapidity - genBackwardJetRapidity, genWeight);
+                    
+                    gendPhiJets_Zinc4jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    gendPhiJets_2_Zinc4jet->Fill(deltaPhi(genLeadJ, genSecondJ), genWeight);
+                    
+                    gendPhiJetsFB_Zinc4jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
+                    gendPhiJetsFB_2_Zinc4jet->Fill(deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), genWeight);
                     
                     gendiJetMass_Zinc4jet->Fill(genJet1Plus2.M(), genWeight);
                     gendiJetMass_2_Zinc4jet->Fill(genJet1Plus2.M(), genWeight);
                     
                     gendiJetPt_Zinc4jet->Fill(genJet1Plus2.Pt(), genWeight);
                     gendiJetPt_2_Zinc4jet->Fill(genJet1Plus2.Pt(), genWeight);
+                    
+                    gendPhiLepJet4_Zinc4jet->Fill(deltaPhi(genLep1, genNewFourthJ), genWeight);
+                    gendPhiLepJet4_2_Zinc4jet->Fill(deltaPhi(genLep1, genNewFourthJ), genWeight);
+                    //---
+                    genFourthJetRapidity_Zinc4jet->Fill(fabs(genNewFourthJ.Rapidity()), genWeight);
+                    genFourthJetRapidityFull_Zinc4jet->Fill(genNewFourthJ.Rapidity(), genWeight);
                     //*************************************** end edit ***************************************************************//
+                    genZMass_Zinc4jet->Fill(genZ.M(), genWeight);
+                    genZPt_Zinc4jet->Fill(genZ.Pt(), genWeight);
+                    genZRapidity_Zinc4jet->Fill(genZ.Rapidity(), genWeight);
+                    genZEta_Zinc4jet->Fill(genZ.Eta(), genWeight);
                     genFourthJetPtEta_Zinc4jet->Fill(genJets[3].pt, fabs(genJets[3].eta), genWeight);
                     genFirstHighestJetPt_Zinc4jet->Fill(genJets[0].pt, genWeight);
                     genSecondHighestJetPt_Zinc4jet->Fill(genJets[1].pt, genWeight);
                     genThirdHighestJetPt_Zinc4jet->Fill(genJets[2].pt, genWeight);
-                    genJetsHT_Zinc4jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc4jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_2_Zinc4jet->Fill(genJetsHT, genWeight);
+                    
                 }
                 if (nGoodGenJets >= 5){
                     genZNGoodJets_Zinc->Fill(5., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(5., genWeight);
-                    genZMass_Zinc5jet->Fill(genZ.M(), genWeight);
-                    genZPt_Zinc5jet->Fill(genZ.Pt(), genWeight);
-                    genZRapidity_Zinc5jet->Fill(genZ.Rapidity(), genWeight);
-                    genZEta_Zinc5jet->Fill(genZ.Eta(), genWeight);
                     genFifthJetPt_Zinc5jet->Fill(genJets[4].pt, genWeight);
                     genFifthJetPt_1_Zinc5jet->Fill(genJets[4].pt, genWeight);
                     genFifthJetPt_2_Zinc5jet->Fill(genJets[4].pt, genWeight);
                     genFifthJetEta_Zinc5jet->Fill(fabs(genJets[4].eta), genWeight);
                     genFifthJetEta_2_Zinc5jet->Fill(fabs(genJets[4].eta), genWeight);
+                    genJetsHT_Zinc5jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc5jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_2_Zinc5jet->Fill(genJetsHT, genWeight);
+                    //*************************************** begin edit *************************************************************//
+                    gendPhiLepJet5_Zinc5jet->Fill(deltaPhi(genLep1, genNewFifthJ), genWeight);
+                    gendPhiLepJet5_2_Zinc5jet->Fill(deltaPhi(genLep1, genNewFifthJ), genWeight);
+                    //*************************************** end edit ***************************************************************//
+                    
+                    genZMass_Zinc5jet->Fill(genZ.M(), genWeight);
+                    genZPt_Zinc5jet->Fill(genZ.Pt(), genWeight);
+                    genZRapidity_Zinc5jet->Fill(genZ.Rapidity(), genWeight);
+                    genZEta_Zinc5jet->Fill(genZ.Eta(), genWeight);
                     genFifthJetPtEta_Zinc5jet->Fill(genJets[4].pt, fabs(genJets[4].eta), genWeight);
                     genFirstHighestJetPt_Zinc5jet->Fill(genJets[0].pt, genWeight);
                     genSecondHighestJetPt_Zinc5jet->Fill(genJets[1].pt, genWeight);
                     genThirdHighestJetPt_Zinc5jet->Fill(genJets[2].pt, genWeight);
-                    genJetsHT_Zinc5jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc5jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_2_Zinc5jet->Fill(genJetsHT, genWeight);
+                    
                 }
                 if (nGoodGenJets >= 6){
                     genZNGoodJets_Zinc->Fill(6., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(6., genWeight);
+                    genSixthJetPt_Zinc6jet->Fill(genJets[5].pt, genWeight);
+                    genSixthJetPt_1_Zinc6jet->Fill(genJets[5].pt, genWeight);
+                    genSixthJetEta_Zinc6jet->Fill(fabs(genJets[5].eta), genWeight);
+                    genJetsHT_Zinc6jet->Fill(genJetsHT, genWeight);
+                    genJetsHT_1_Zinc6jet->Fill(genJetsHT, genWeight);
+                    
                     genZMass_Zinc6jet->Fill(genZ.M(), genWeight);
                     genZPt_Zinc6jet->Fill(genZ.Pt(), genWeight);
                     genZRapidity_Zinc6jet->Fill(genZ.Rapidity(), genWeight);
                     genZEta_Zinc6jet->Fill(genZ.Eta(), genWeight);
-                    genSixthJetPt_Zinc6jet->Fill(genJets[5].pt, genWeight);
-                    genSixthJetPt_1_Zinc6jet->Fill(genJets[5].pt, genWeight);
-                    genSixthJetEta_Zinc6jet->Fill(fabs(genJets[5].eta), genWeight);
                     genSixthJetPtEta_Zinc6jet->Fill(genJets[5].pt, fabs(genJets[5].eta), genWeight);
                     genFirstHighestJetPt_Zinc6jet->Fill(genJets[0].pt, genWeight);
                     genSecondHighestJetPt_Zinc6jet->Fill(genJets[1].pt, genWeight);
                     genThirdHighestJetPt_Zinc6jet->Fill(genJets[2].pt, genWeight);
-                    genJetsHT_Zinc6jet->Fill(genJetsHT, genWeight);
-                    genJetsHT_1_Zinc6jet->Fill(genJetsHT, genWeight);
                 }
                 if (nGoodGenJets >= 7){
                     genZNGoodJets_Zinc->Fill(7., genWeight);
@@ -1966,27 +2018,27 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             }
             
             nEventsIncl0Jets++;
-            ZNGoodJetsNVtx_Zexc->Fill(nGoodJets, EvtInfo_NumVtx  , weight);
+            
             ZNGoodJets_Zinc->Fill(0., weight);
             ZNGoodJetsFull_Zinc->Fill(0., weight);
             ZNGoodJets_Zexc->Fill(nGoodJets, weight);
             ZNGoodJetsFull_Zexc->Fill(nGoodJets, weight);
-            ZNGoodJets_Zinc_NoWeight->Fill(0.);
-            ZMass_Zinc0jet->Fill(Z.M(), weight);
             MET_Zinc0jet->Fill(METpt, weight);
-            METphi_Zinc0jet->Fill(METphi, weight);
             MT_Zinc0jet->Fill(MT, weight);
-            
             MuPFIso_Zinc0jet->Fill(lepton1.iso, weight);
             MuPFIso_2ndZinc0jet->Fill(lepton1.iso, weight);
             MuPFIso_3rdZinc0jet->Fill(lepton1.iso, weight);
-            
-            ZPt_Zinc0jet->Fill(Z.Pt(), weight);
-            ZRapidity_Zinc0jet->Fill(Z.Rapidity(), weight);
-            ZEta_Zinc0jet->Fill(Z.Eta(), weight);
             lepPt_Zinc0jet->Fill(lepton1.pt, weight);
             lepEta_Zinc0jet->Fill(lepton1.eta, weight);
             lepPhi_Zinc0jet->Fill(lepton1.phi, weight);
+            
+            ZNGoodJetsNVtx_Zexc->Fill(nGoodJets, EvtInfo_NumVtx  , weight);
+            ZNGoodJets_Zinc_NoWeight->Fill(0.);
+            ZMass_Zinc0jet->Fill(Z.M(), weight);
+            METphi_Zinc0jet->Fill(METphi, weight);
+            ZPt_Zinc0jet->Fill(Z.Pt(), weight);
+            ZRapidity_Zinc0jet->Fill(Z.Rapidity(), weight);
+            ZEta_Zinc0jet->Fill(Z.Eta(), weight);
             if (doZ || doTT){
                 lepPt_Zinc0jet->Fill(lepton2.pt, weight);
                 lepEta_Zinc0jet->Fill(lepton2.eta, weight);
@@ -2018,6 +2070,28 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 1){
                 ZNGoodJets_Zinc->Fill(1., weight);
                 ZNGoodJetsFull_Zinc->Fill(1., weight);
+                FirstJetPt_Zinc1jet->Fill(jets[0].pt, weight);
+                FirstJetPt_1_Zinc1jet->Fill(jets[0].pt, weight);
+                FirstJetPt_2_Zinc1jet->Fill(jets[0].pt, weight);
+                FirstJetEta_Zinc1jet->Fill(fabs(jets[0].eta), weight);
+                FirstJetEta_2_Zinc1jet->Fill(fabs(jets[0].eta), weight);
+                FirstJetEtaFull_Zinc1jet->Fill(jets[0].eta, weight);
+                JetsHT_Zinc1jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc1jet->Fill(jetsHT, weight);
+                JetsHT_2_Zinc1jet->Fill(jetsHT, weight);
+                //*************************************** begin edit *************************************************************//
+                dPhiLepJet1_Zinc1jet->Fill(deltaPhi(lep1, newLeadJ), weight);
+                dPhiLepJet1_2_Zinc1jet->Fill(deltaPhi(lep1, newLeadJ), weight);
+                //cout << deltaPhi(lep1, newLeadJ) << endl;
+                MeanNJetsHT_1D_Zinc1jet->Fill(jetsHT, weight*nGoodJets);
+                MeanNJetsHT_Zinc1jet->Fill(jetsHT, nGoodJets, weight);
+                //---
+                FirstJetRapidity_Zinc1jet->Fill(fabs(newLeadJ.Rapidity()), weight);
+                FirstJetRapidityFull_Zinc1jet->Fill(newLeadJ.Rapidity(), weight);
+                FirstJetmass_Zinc1jet->Fill(newLeadJ.M(), weight);
+                FirstJetmass_1_Zinc1jet->Fill(newLeadJ.M(), weight);
+                //*************************************** end edit ***************************************************************//
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(1.);
                 ZMass_Zinc1jet->Fill(Z.M(), weight);
                 MET_Zinc1jet->Fill(METpt, weight);
@@ -2038,27 +2112,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 dEtaLeptons_Zinc1jet->Fill(lepton1.eta - lepton2.eta, weight);
                 dRLeptons_Zinc1jet->Fill(deltaR(lepton1.phi, lepton1.eta, lepton2.phi, lepton2.eta), weight);
                 SpTLeptons_Zinc1jet->Fill(SpTsub(lep1, lep2), weight);
-                FirstJetPt_Zinc1jet->Fill(jets[0].pt, weight);
-                FirstJetPt_1_Zinc1jet->Fill(jets[0].pt, weight);
-                FirstJetPt_2_Zinc1jet->Fill(jets[0].pt, weight);
-                
                 FirstHighestJetPt_Zinc1jet->Fill(jets[0].pt, weight);
-                FirstJetEta_Zinc1jet->Fill(fabs(jets[0].eta), weight);
-                FirstJetEta_2_Zinc1jet->Fill(fabs(jets[0].eta), weight);
-                FirstJetEtaFull_Zinc1jet->Fill(jets[0].eta, weight);
-                //*************************************** begin edit *************************************************************//
-                FirstJetRapidity_Zinc1jet->Fill(fabs(newLeadJ.Rapidity()), weight);
-                FirstJetRapidityFull_Zinc1jet->Fill(newLeadJ.Rapidity(), weight);
-                FirstJetmass_Zinc1jet->Fill(newLeadJ.M(), weight);
-                FirstJetmass_1_Zinc1jet->Fill(newLeadJ.M(), weight);
-                MeanNJetsHT_1D_Zinc1jet->Fill(jetsHT, weight*nGoodJets);
-                MeanNJetsHT_Zinc1jet->Fill(jetsHT, nGoodJets, weight);
-                //*************************************** end edit ***************************************************************//
                 FirstJetPtEta_Zinc1jet->Fill(jets[0].pt, fabs(jets[0].eta), weight);
                 FirstJetPhi_Zinc1jet->Fill(jets[0].phi, weight);
-                JetsHT_Zinc1jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc1jet->Fill(jetsHT, weight);
-                JetsHT_2_Zinc1jet->Fill(jetsHT, weight);
                 
                 for (unsigned short j(0); j < nGoodJets; j++){
                     AllJetPt_Zinc1jet->Fill(jets[j].pt, weight);
@@ -2103,21 +2159,69 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             }
             if (nGoodJets >= 2){
                 TLorentzVector jet1Plus2PlusZ = jet1Plus2 + Z;
+                
                 ZNGoodJets_Zinc->Fill(2., weight);
                 ZNGoodJetsFull_Zinc->Fill(2., weight);
+                MET_Zinc2jet->Fill(METpt, weight);
+                MT_Zinc2jet->Fill(MT, weight);
+                SecondJetPt_Zinc2jet->Fill(jets[1].pt, weight);
+                SecondJetPt_1_Zinc2jet->Fill(jets[1].pt, weight);
+                SecondJetPt_2_Zinc2jet->Fill(jets[1].pt, weight);
+                SecondJetEta_Zinc2jet->Fill(fabs(jets[1].eta), weight);
+                SecondJetEta_2_Zinc2jet->Fill(fabs(jets[1].eta), weight);
+                SecondJetEtaFull_Zinc2jet->Fill(jets[1].eta, weight);
+                JetsHT_Zinc2jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc2jet->Fill(jetsHT, weight);
+                JetsHT_2_Zinc2jet->Fill(jetsHT, weight);
+                //*************************************** begin edit *************************************************************//
+                dRapidityJets_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                dRapidityJets_2_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                
+                dRapidityJetsFB_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                dRapidityJetsFB_2_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                
+                diJetMass_Zinc2jet->Fill(jet1Plus2.M(), weight);
+                diJetMass_2_Zinc2jet->Fill(jet1Plus2.M(), weight);
+                
+                dPhiJets_Zinc2jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                dPhiJets_2_Zinc2jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                
+                dPhiJetsFB_Zinc2jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                dPhiJetsFB_2_Zinc2jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                
+                dRJets_Zinc2jet->Fill(deltaRYPhi(newLeadJ, newSecondJ), weight);
+                dRJets_2_Zinc2jet->Fill(deltaRYPhi(newLeadJ, newSecondJ), weight);
+                
+                diJetPt_Zinc2jet->Fill(jet1Plus2.Pt(), weight);
+                diJetPt_2_Zinc2jet->Fill(jet1Plus2.Pt(), weight);
+            
+                dPhiLepJet2_Zinc2jet->Fill(deltaPhi(lep1, newSecondJ), weight);
+                dPhiLepJet2_2_Zinc2jet->Fill(deltaPhi(lep1, newSecondJ), weight);
+                
+                MeanNJetsHT_Zinc2jet->Fill(jetsHT, nGoodJets, weight);
+                MeanNJetsdRapidity_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), nGoodJets, weight);
+                MeanNJetsdRapidityFB_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, nGoodJets, weight);
+                //---
+                SecondJetRapidity_Zinc2jet->Fill(fabs(newSecondJ.Rapidity()), weight);
+                SecondJetRapidityFull_Zinc2jet->Fill(newSecondJ.Rapidity(), weight);
+                SecondJetmass_Zinc2jet->Fill(newSecondJ.M(), weight);
+                SecondJetmass_1_Zinc2jet->Fill(newSecondJ.M(), weight);
+                MeanNJetsHT_1D_Zinc2jet->Fill(jetsHT, weight*nGoodJets);
+                MeanNJetsdRapidity_1D_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight*nGoodJets);
+                MeanNJetsdRapidityFB_1D_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight*nGoodJets);
+                //*************************************** end edit ***************************************************************//
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(2.);
                 ZMass_Zinc2jet->Fill(Z.M(), weight);
-                MET_Zinc2jet->Fill(METpt, weight);
                 METphi_Zinc2jet->Fill(METphi, weight);
-                MT_Zinc2jet->Fill(MT, weight);
                 TwoJetsPtDiff_Zinc2jet->Fill(jet1Minus2.Pt(), weight);
                 BestTwoJetsPtDiff_Zinc2jet->Fill(bestJet1Minus2.Pt(), weight);
-                JetsMass_Zinc2jet->Fill(jet1Plus2.M(), weight);
                 ZPt_Zinc2jet->Fill(Z.Pt(), weight);
                 ZRapidity_Zinc2jet->Fill(Z.Rapidity(), weight);
                 ZEta_Zinc2jet->Fill(Z.Eta(), weight);
                 lepPt_Zinc2jet->Fill(lepton1.pt, weight);
                 lepEta_Zinc2jet->Fill(lepton1.eta, weight);
+                JetsMass_Zinc2jet->Fill(jet1Plus2.M(), weight);
                 if (doZ || doTT){
                     lepPt_Zinc2jet->Fill(lepton2.pt, weight);
                     lepEta_Zinc2jet->Fill(lepton2.eta, weight);
@@ -2128,56 +2232,10 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 SpTLeptons_Zinc2jet->Fill(SpTsub(lep1, lep2), weight);
                 FirstHighestJetPt_Zinc2jet->Fill(jets[0].pt, weight);
                 SecondHighestJetPt_Zinc2jet->Fill(jets[1].pt, weight);
-                SecondJetPt_Zinc2jet->Fill(jets[1].pt, weight);
-                SecondJetPt_1_Zinc2jet->Fill(jets[1].pt, weight);
-                SecondJetPt_2_Zinc2jet->Fill(jets[1].pt, weight);
-                SecondJetEta_Zinc2jet->Fill(fabs(jets[1].eta), weight);
-                SecondJetEta_2_Zinc2jet->Fill(fabs(jets[1].eta), weight);
-                
-                SecondJetEtaFull_Zinc2jet->Fill(jets[1].eta, weight);
-                //*************************************** begin edit *************************************************************//
-                SecondJetRapidity_Zinc2jet->Fill(fabs(newSecondJ.Rapidity()), weight);
-                SecondJetRapidityFull_Zinc2jet->Fill(newSecondJ.Rapidity(), weight);
-                SecondJetmass_Zinc2jet->Fill(newSecondJ.M(), weight);
-                SecondJetmass_1_Zinc2jet->Fill(newSecondJ.M(), weight);
-                dRapidityJets_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                dRapidityJets_2_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                
-                dRapidityJetsFB_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                dRapidityJetsFB_2_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                
-                diJetMass_Zinc2jet->Fill(jet1Plus2.M(), weight);
-                diJetMass_2_Zinc2jet->Fill(jet1Plus2.M(), weight);
-                
-                dPhiJetsFB_Zinc2jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
-                dPhiJetsFB_2_Zinc2jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
-                
-                dRJets_Zinc2jet->Fill(deltaRYPhi(newLeadJ, newSecondJ), weight);
-                dRJets_2_Zinc2jet->Fill(deltaRYPhi(newLeadJ, newSecondJ), weight);
-                
-                diJetPt_Zinc2jet->Fill(jet1Plus2.Pt(), weight);
-                diJetPt_2_Zinc2jet->Fill(jet1Plus2.Pt(), weight);
-                
-                MeanNJetsHT_1D_Zinc2jet->Fill(jetsHT, weight*nGoodJets);
-                MeanNJetsdRapidity_1D_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight*nGoodJets);
-                MeanNJetsdRapidityFB_1D_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight*nGoodJets);
-                
-                MeanNJetsHT_Zinc2jet->Fill(jetsHT, nGoodJets, weight);
-                MeanNJetsdRapidity_Zinc2jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), nGoodJets, weight);
-                MeanNJetsdRapidityFB_Zinc2jet->Fill(ForwardJetRapidity - BackwardJetRapidity, nGoodJets, weight);
-                //*************************************** end edit ***************************************************************//
                 SecondJetPtEta_Zinc2jet->Fill(jets[1].pt, fabs(jets[1].eta), weight);
                 RatioJetPt21_Zinc2jet->Fill(jets[1].pt/jets[0].pt, weight);
                 SecondJetPhi_Zinc2jet->Fill(jets[1].phi, weight);
-                JetsHT_Zinc2jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc2jet->Fill(jetsHT, weight);
-                JetsHT_2_Zinc2jet->Fill(jetsHT, weight);
-                
                 ptBal_Zinc2jet->Fill(jet1Plus2PlusZ.Pt(), weight);
-                
-                dPhiJets_Zinc2jet->Fill(deltaPhi(leadJ, secondJ), weight);
-                dPhiJets_2_Zinc2jet->Fill(deltaPhi(leadJ, secondJ), weight);
-                
                 BestdPhiJets_Zinc2jet->Fill(deltaPhi(bestTwoJets.first, bestTwoJets.second), weight);
                 dEtaJets_Zinc2jet->Fill(leadJ.Eta() - secondJ.Eta(), weight);
                 dEtaFirstJetZ_Zinc2jet->Fill(leadJ.Eta() - Z.Eta(), weight);
@@ -2544,6 +2602,50 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 3) {
                 ZNGoodJets_Zinc->Fill(3., weight);
                 ZNGoodJetsFull_Zinc->Fill(3., weight);
+                ThirdJetPt_Zinc3jet->Fill(jets[2].pt, weight);
+                ThirdJetPt_1_Zinc3jet->Fill(jets[2].pt, weight);
+                ThirdJetPt_2_Zinc3jet->Fill(jets[2].pt, weight);
+                ThirdJetEta_Zinc3jet->Fill(fabs(jets[2].eta), weight);
+                ThirdJetEta_2_Zinc3jet->Fill(fabs(jets[2].eta), weight);
+                ThirdJetEtaFull_Zinc3jet->Fill(jets[2].eta, weight);
+                JetsHT_Zinc3jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc3jet->Fill(jetsHT, weight);
+                JetsHT_2_Zinc3jet->Fill(jetsHT, weight);
+                //*************************************** begin edit *************************************************************//
+                
+                dRapidityJets_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                dRapidityJets_2_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                
+                dRapidityJets_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                dRapidityJets_2_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                
+                dRapidityJets_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                dRapidityJets_2_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                
+                dRapidityJetsFB_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                dRapidityJetsFB_2_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                
+                dPhiJets_Zinc3jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                dPhiJets_2_Zinc3jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                
+                dPhiJetsFB_Zinc3jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                dPhiJetsFB_2_Zinc3jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                
+                diJetMass_Zinc3jet->Fill(jet1Plus2.M(), weight);
+                diJetMass_2_Zinc3jet->Fill(jet1Plus2.M(), weight);
+                
+                diJetPt_Zinc3jet->Fill(jet1Plus2.Pt(), weight);
+                diJetPt_2_Zinc3jet->Fill(jet1Plus2.Pt(), weight);
+                
+                dPhiLepJet3_Zinc3jet->Fill(deltaPhi(lep1, newThirdJ), weight);
+                dPhiLepJet3_2_Zinc3jet->Fill(deltaPhi(lep1, newThirdJ), weight);
+                //---
+                ThirdJetRapidity_Zinc3jet->Fill(fabs(newThirdJ.Rapidity()), weight);
+                ThirdJetRapidityFull_Zinc3jet->Fill(newThirdJ.Rapidity(), weight);
+                ThirdJetmass_Zinc3jet->Fill(newThirdJ.M(), weight);
+                ThirdJetmass_1_Zinc3jet->Fill(newThirdJ.M(), weight);
+                //*************************************** end edit ***************************************************************//
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(3.);
                 ZMass_Zinc3jet->Fill(Z.M(), weight);
                 MET_Zinc3jet->Fill(METpt, weight);
@@ -2562,45 +2664,12 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 dEtaLeptons_Zinc3jet->Fill(lepton1.eta - lepton2.eta, weight);
                 dRLeptons_Zinc3jet->Fill(deltaR(lepton1.phi, lepton1.eta, lepton2.phi, lepton2.eta), weight);
                 SpTLeptons_Zinc3jet->Fill(SpTsub(lep1, lep2), weight);
-                ThirdJetPt_Zinc3jet->Fill(jets[2].pt, weight);
-                ThirdJetPt_1_Zinc3jet->Fill(jets[2].pt, weight);
-                ThirdJetPt_2_Zinc3jet->Fill(jets[2].pt, weight);
-                
                 FirstHighestJetPt_Zinc3jet->Fill(jets[0].pt, weight);
                 SecondHighestJetPt_Zinc3jet->Fill(jets[1].pt, weight);
                 ThirdHighestJetPt_Zinc3jet->Fill(jets[2].pt, weight);
-                ThirdJetEta_Zinc3jet->Fill(fabs(jets[2].eta), weight);
-                ThirdJetEta_2_Zinc3jet->Fill(fabs(jets[2].eta), weight);
-                ThirdJetEtaFull_Zinc3jet->Fill(jets[2].eta, weight);
-                //*************************************** begin edit *************************************************************//
-                ThirdJetRapidity_Zinc3jet->Fill(fabs(newThirdJ.Rapidity()), weight);
-                ThirdJetRapidityFull_Zinc3jet->Fill(newThirdJ.Rapidity(), weight);
-                ThirdJetmass_Zinc3jet->Fill(newThirdJ.M(), weight);
-                ThirdJetmass_1_Zinc3jet->Fill(newThirdJ.M(), weight);
-                dRapidityJets_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                dRapidityJets_2_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                
-                dRapidityJets_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
-                dRapidityJets_2_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
-                
-                dRapidityJets_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
-                dRapidityJets_2_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
-                
-                dRapidityJetsFB_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                dRapidityJetsFB_2_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                
-                diJetMass_Zinc3jet->Fill(jet1Plus2.M(), weight);
-                diJetMass_2_Zinc3jet->Fill(jet1Plus2.M(), weight);
-                
-                diJetPt_Zinc3jet->Fill(jet1Plus2.Pt(), weight);
-                diJetPt_2_Zinc3jet->Fill(jet1Plus2.Pt(), weight);
-                //*************************************** end edit ***************************************************************//
                 ThirdJetPtEta_Zinc3jet->Fill(jets[2].pt, fabs(jets[2].eta), weight);
                 RatioJetPt32_Zinc3jet->Fill(jets[2].pt/jets[1].pt, weight);
                 ThirdJetPhi_Zinc3jet->Fill(jets[2].phi, weight);
-                JetsHT_Zinc3jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc3jet->Fill(jetsHT, weight);
-                JetsHT_2_Zinc3jet->Fill(jetsHT, weight);
                 
                 for (unsigned short j(0); j < nGoodJets; j++){
                     AllJetPt_Zinc3jet->Fill(jets[j].pt, weight);
@@ -2628,6 +2697,50 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 4){
                 ZNGoodJets_Zinc->Fill(4., weight);
                 ZNGoodJetsFull_Zinc->Fill(4., weight);
+                FourthJetPt_Zinc4jet->Fill(jets[3].pt, weight);
+                FourthJetPt_1_Zinc4jet->Fill(jets[3].pt, weight);
+                FourthJetPt_2_Zinc4jet->Fill(jets[3].pt, weight);
+                FourthJetEta_Zinc4jet->Fill(fabs(jets[3].eta), weight);
+                FourthJetEta_2_Zinc4jet->Fill(fabs(jets[3].eta), weight);
+                FourthJetEtaFull_Zinc4jet->Fill(jets[3].eta, weight);
+                JetsHT_Zinc4jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc4jet->Fill(jetsHT, weight);
+                JetsHT_2_Zinc4jet->Fill(jetsHT, weight);
+                //*************************************** begin edit *************************************************************//
+                
+                dRapidityJets_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                dRapidityJets_2_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
+                
+                dRapidityJets_First_Third_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                dRapidityJets_2_First_Third_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                
+                dRapidityJets_Second_Third_Zinc4jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                dRapidityJets_2_Second_Third_Zinc4jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), weight);
+                
+                dRapidityJetsFB_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                dRapidityJetsFB_2_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
+                
+                dPhiJets_Zinc4jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                dPhiJets_2_Zinc4jet->Fill(deltaPhi(leadJ, secondJ), weight);
+                
+                dPhiJetsFB_Zinc4jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                dPhiJetsFB_2_Zinc4jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), weight);
+                
+                diJetMass_Zinc4jet->Fill(jet1Plus2.M(), weight);
+                diJetMass_2_Zinc4jet->Fill(jet1Plus2.M(), weight);
+                
+                diJetPt_Zinc4jet->Fill(jet1Plus2.Pt(), weight);
+                diJetPt_2_Zinc4jet->Fill(jet1Plus2.Pt(), weight);
+                
+                dPhiLepJet4_Zinc4jet->Fill(deltaPhi(lep1, newFourthJ), weight);
+                dPhiLepJet4_2_Zinc4jet->Fill(deltaPhi(lep1, newFourthJ), weight);
+                //---
+                FourthJetRapidity_Zinc4jet->Fill(fabs(newFourthJ.Rapidity()), weight);
+                FourthJetRapidityFull_Zinc4jet->Fill(newFourthJ.Rapidity(), weight);
+                FourthJetmass_Zinc4jet->Fill(newFourthJ.M(), weight);
+                FourthJetmass_1_Zinc4jet->Fill(newFourthJ.M(), weight);
+                //*************************************** end edit ***************************************************************//
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(4.);
                 ZMass_Zinc4jet->Fill(Z.M(), weight);
                 ZPt_Zinc4jet->Fill(Z.Pt(), weight);
@@ -2643,37 +2756,12 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 dEtaLeptons_Zinc4jet->Fill(lepton1.eta - lepton2.eta, weight);
                 dRLeptons_Zinc4jet->Fill(deltaR(lepton1.phi, lepton1.eta, lepton2.phi, lepton2.eta), weight);
                 SpTLeptons_Zinc4jet->Fill(SpTsub(lep1, lep2), weight);
-                FourthJetPt_Zinc4jet->Fill(jets[3].pt, weight);
-                FourthJetPt_1_Zinc4jet->Fill(jets[3].pt, weight);
-                FourthJetPt_2_Zinc4jet->Fill(jets[3].pt, weight);
                 FirstHighestJetPt_Zinc4jet->Fill(jets[0].pt, weight);
                 SecondHighestJetPt_Zinc4jet->Fill(jets[1].pt, weight);
                 ThirdHighestJetPt_Zinc4jet->Fill(jets[2].pt, weight);
-                FourthJetEta_Zinc4jet->Fill(fabs(jets[3].eta), weight);
-                FourthJetEta_2_Zinc4jet->Fill(fabs(jets[3].eta), weight);
-                FourthJetEtaFull_Zinc4jet->Fill(jets[3].eta, weight);
-                //*************************************** begin edit *************************************************************//
-                FourthJetRapidity_Zinc4jet->Fill(fabs(newFourthJ.Rapidity()), weight);
-                FourthJetRapidityFull_Zinc4jet->Fill(newFourthJ.Rapidity(), weight);
-                FourthJetmass_Zinc4jet->Fill(newFourthJ.M(), weight);
-                FourthJetmass_1_Zinc4jet->Fill(newFourthJ.M(), weight);
-                dRapidityJets_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                dRapidityJets_2_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), weight);
-                
-                dRapidityJetsFB_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                dRapidityJetsFB_2_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, weight);
-                
-                diJetMass_Zinc4jet->Fill(jet1Plus2.M(), weight);
-                diJetMass_2_Zinc4jet->Fill(jet1Plus2.M(), weight);
-                
-                diJetPt_Zinc4jet->Fill(jet1Plus2.Pt(), weight);
-                diJetPt_2_Zinc4jet->Fill(jet1Plus2.Pt(), weight);
-                //*************************************** end edit ***************************************************************//
                 FourthJetPtEta_Zinc4jet->Fill(jets[3].pt, fabs(jets[3].eta), weight);
                 FourthJetPhi_Zinc4jet->Fill(jets[3].phi, weight);
-                JetsHT_Zinc4jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc4jet->Fill(jetsHT, weight);
-                JetsHT_2_Zinc4jet->Fill(jetsHT, weight);
+                
                 for (unsigned short j(0); j < nGoodJets; j++){
                     AllJetPt_Zinc4jet->Fill(jets[j].pt, weight);
                     AllJetEta_Zinc4jet->Fill(jets[j].eta, weight);
@@ -2699,6 +2787,20 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 5){
                 ZNGoodJets_Zinc->Fill(5., weight);
                 ZNGoodJetsFull_Zinc->Fill(5., weight);
+                FifthJetPt_Zinc5jet->Fill(jets[4].pt, weight);
+                FifthJetPt_1_Zinc5jet->Fill(jets[4].pt, weight);
+                FifthJetPt_2_Zinc5jet->Fill(jets[4].pt, weight);
+                FifthJetEta_Zinc5jet->Fill(fabs(jets[4].eta), weight);
+                FifthJetEta_2_Zinc5jet->Fill(fabs(jets[4].eta), weight);
+                FifthJetEtaFull_Zinc5jet->Fill(jets[4].eta, weight);
+                JetsHT_Zinc5jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc5jet->Fill(jetsHT, weight);
+                JetsHT_2_Zinc5jet->Fill(jetsHT, weight);
+                //*************************************** begin edit *************************************************************//
+                dPhiLepJet5_Zinc5jet->Fill(deltaPhi(lep1, newFifthJ), weight);
+                dPhiLepJet5_2_Zinc5jet->Fill(deltaPhi(lep1, newFifthJ), weight);
+                //*************************************** end edit ***************************************************************//
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(5.);
                 ZMass_Zinc5jet->Fill(Z.M(), weight);
                 ZPt_Zinc5jet->Fill(Z.Pt(), weight);
@@ -2714,20 +2816,12 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 dEtaLeptons_Zinc5jet->Fill(lepton1.eta - lepton2.eta, weight);
                 dRLeptons_Zinc5jet->Fill(deltaR(lepton1.phi, lepton1.eta, lepton2.phi, lepton2.eta), weight);
                 SpTLeptons_Zinc5jet->Fill(SpTsub(lep1, lep2), weight);
-                FifthJetPt_Zinc5jet->Fill(jets[4].pt, weight);
-                FifthJetPt_1_Zinc5jet->Fill(jets[4].pt, weight);
-                FifthJetPt_2_Zinc5jet->Fill(jets[4].pt, weight);
                 FirstHighestJetPt_Zinc5jet->Fill(jets[0].pt, weight);
                 SecondHighestJetPt_Zinc5jet->Fill(jets[1].pt, weight);
                 ThirdHighestJetPt_Zinc5jet->Fill(jets[2].pt, weight);
-                FifthJetEta_Zinc5jet->Fill(fabs(jets[4].eta), weight);
-                FifthJetEta_2_Zinc5jet->Fill(fabs(jets[4].eta), weight);
-                FifthJetEtaFull_Zinc5jet->Fill(jets[4].eta, weight);
                 FifthJetPtEta_Zinc5jet->Fill(jets[4].pt, fabs(jets[4].eta), weight);
                 FifthJetPhi_Zinc5jet->Fill(jets[4].phi, weight);
-                JetsHT_Zinc5jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc5jet->Fill(jetsHT, weight);
-                JetsHT_2_Zinc5jet->Fill(jetsHT, weight);
+                
                 if (nGoodJets == 5){
                     ZNGoodJets_Zexc_NoWeight->Fill(5.);
                     ZMass_Zexc5jet->Fill(Z.M(), weight);
@@ -2748,22 +2842,24 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 6){
                 ZNGoodJets_Zinc->Fill(6., weight);
                 ZNGoodJetsFull_Zinc->Fill(6., weight);
+                SixthJetPt_Zinc6jet->Fill(jets[5].pt, weight);
+                SixthJetPt_1_Zinc6jet->Fill(jets[5].pt, weight);
+                SixthJetEta_Zinc6jet->Fill(fabs(jets[5].eta), weight);
+                SixthJetEtaFull_Zinc6jet->Fill(jets[5].eta, weight);
+                JetsHT_Zinc6jet->Fill(jetsHT, weight);
+                JetsHT_1_Zinc6jet->Fill(jetsHT, weight);
+                
                 ZNGoodJets_Zinc_NoWeight->Fill(6.);
                 ZMass_Zinc6jet->Fill(Z.M(), weight);
                 ZPt_Zinc6jet->Fill(Z.Pt(), weight);
                 ZRapidity_Zinc6jet->Fill(Z.Rapidity(), weight);
                 ZEta_Zinc6jet->Fill(Z.Eta(), weight);
-                SixthJetPt_Zinc6jet->Fill(jets[5].pt, weight);
-                SixthJetPt_1_Zinc6jet->Fill(jets[5].pt, weight);
                 FirstHighestJetPt_Zinc6jet->Fill(jets[0].pt, weight);
                 SecondHighestJetPt_Zinc6jet->Fill(jets[1].pt, weight);
                 ThirdHighestJetPt_Zinc6jet->Fill(jets[2].pt, weight);
-                SixthJetEta_Zinc6jet->Fill(fabs(jets[5].eta), weight);
-                SixthJetEtaFull_Zinc6jet->Fill(jets[5].eta, weight);
                 SixthJetPtEta_Zinc6jet->Fill(jets[5].pt, fabs(jets[5].eta), weight);
                 SixthJetPhi_Zinc6jet->Fill(jets[5].phi, weight);
-                JetsHT_Zinc6jet->Fill(jetsHT, weight);
-                JetsHT_1_Zinc6jet->Fill(jetsHT, weight);
+                
                 if (nGoodJets == 6){
                     ZNGoodJets_Zexc_NoWeight->Fill(6.);
                     ZMass_Zexc6jet->Fill(Z.M(), weight);
@@ -2806,6 +2902,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 hresponseFirstJetEta_2_Zinc1jet->Fill(fabs(jets[0].eta), fabs(genJets[0].eta), weight);
                 hresponseJetsHT_1_Zinc1jet->Fill(jetsHT, genJetsHT, weight);
                 hresponseJetsHT_2_Zinc1jet->Fill(jetsHT, genJetsHT, weight);
+                
+                hresponsedPhiLepJet1_Zinc1jet->Fill(deltaPhi(lep1, newLeadJ), deltaPhi(genLep1, genNewLeadJ), weight);
+                hresponsedPhiLepJet1_2_Zinc1jet->Fill(deltaPhi(lep1, newLeadJ), deltaPhi(genLep1, genNewLeadJ), weight);
             }
             //-- Second Jet Pt
             if (nGoodGenJets >= 2 && nGoodJets >= 2){
@@ -2841,6 +2940,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 
                 hresponsediJetPt_Zinc2jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
                 hresponsediJetPt_2_Zinc2jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
+                
+                hresponsedPhiLepJet2_Zinc2jet->Fill(deltaPhi(lep1, newSecondJ), deltaPhi(genLep1, genNewSecondJ), weight);
+                hresponsedPhiLepJet2_2_Zinc2jet->Fill(deltaPhi(lep1, newSecondJ), deltaPhi(genLep1, genNewSecondJ), weight);
             }
             //-- Third Jet Pt
             if (nGoodGenJets >= 3 && nGoodJets >= 3){
@@ -2859,20 +2961,29 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 hresponsedRapidityJets_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), weight);
                 hresponsedRapidityJets_2_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), weight);
                 
-                hresponsedRapidityJetsFB_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
-                hresponsedRapidityJetsFB_2_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
-                
                 hresponsedRapidityJets_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
                 hresponsedRapidityJets_2_First_Third_Zinc3jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
                 
                 hresponsedRapidityJets_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
                 hresponsedRapidityJets_2_Second_Third_Zinc3jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
                 
+                hresponsedRapidityJetsFB_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
+                hresponsedRapidityJetsFB_2_Zinc3jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
+                
+                hresponsedPhiJets_Zinc3jet->Fill(deltaPhi(leadJ, secondJ), deltaPhi(genLeadJ, genSecondJ), weight);
+                hresponsedPhiJets_2_Zinc3jet->Fill(deltaPhi(leadJ, secondJ), deltaPhi(genLeadJ, genSecondJ), weight);
+                
+                hresponsedPhiJetsFB_Zinc3jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), weight);
+                hresponsedPhiJetsFB_2_Zinc3jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), weight);
+                
                 hresponsediJetMass_Zinc3jet->Fill(jet1Plus2.M(),genJet1Plus2.M(), weight);
                 hresponsediJetMass_2_Zinc3jet->Fill(jet1Plus2.M(),genJet1Plus2.M(), weight);
                 
                 hresponsediJetPt_Zinc3jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
                 hresponsediJetPt_2_Zinc3jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
+                
+                hresponsedPhiLepJet3_Zinc3jet->Fill(deltaPhi(lep1, newThirdJ), deltaPhi(genLep1, genNewThirdJ), weight);
+                hresponsedPhiLepJet3_2_Zinc3jet->Fill(deltaPhi(lep1, newThirdJ), deltaPhi(genLep1, genNewThirdJ), weight);
             }
             //-- Fourth Jet Pt
             if (nGoodGenJets >= 4 && nGoodJets >= 4){
@@ -2888,18 +2999,32 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 hresponseJetsHT_1_Zinc4jet->Fill(jetsHT, genJetsHT, weight);
                 hresponseJetsHT_2_Zinc4jet->Fill(jetsHT, genJetsHT, weight);
                 
-                
                 hresponsedRapidityJets_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), weight);
                 hresponsedRapidityJets_2_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newSecondJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewSecondJ.Rapidity()), weight);
                 
+                hresponsedRapidityJets_First_Third_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
+                hresponsedRapidityJets_2_First_Third_Zinc4jet->Fill(fabs(newLeadJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewLeadJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
+                
+                hresponsedRapidityJets_Second_Third_Zinc4jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
+                hresponsedRapidityJets_2_Second_Third_Zinc4jet->Fill(fabs(newSecondJ.Rapidity() - newThirdJ.Rapidity()), fabs(genNewSecondJ.Rapidity() - genNewThirdJ.Rapidity()), weight);
+                
                 hresponsedRapidityJetsFB_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
                 hresponsedRapidityJetsFB_2_Zinc4jet->Fill(ForwardJetRapidity - BackwardJetRapidity, genForwardJetRapidity - genBackwardJetRapidity, weight);
+                
+                hresponsedPhiJets_Zinc4jet->Fill(deltaPhi(leadJ, secondJ), deltaPhi(genLeadJ, genSecondJ), weight);
+                hresponsedPhiJets_2_Zinc4jet->Fill(deltaPhi(leadJ, secondJ), deltaPhi(genLeadJ, genSecondJ), weight);
+                
+                hresponsedPhiJetsFB_Zinc4jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), weight);
+                hresponsedPhiJetsFB_2_Zinc4jet->Fill(deltaPhi(vJetYOrdered[0], vJetYOrdered[vJetYOrdered.size() - 1] ), deltaPhi(genvJetYOrdered[0], genvJetYOrdered[genvJetYOrdered.size() - 1] ), weight);
                 
                 hresponsediJetMass_Zinc4jet->Fill(jet1Plus2.M(), genJet1Plus2.M(), weight);
                 hresponsediJetMass_2_Zinc4jet->Fill(jet1Plus2.M(), genJet1Plus2.M(), weight);
                 
                 hresponsediJetPt_Zinc4jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
                 hresponsediJetPt_2_Zinc4jet->Fill(jet1Plus2.Pt(), genJet1Plus2.Pt(), weight);
+                
+                hresponsedPhiLepJet4_Zinc4jet->Fill(deltaPhi(lep1, newFourthJ), deltaPhi(genLep1, genNewFourthJ), weight);
+                hresponsedPhiLepJet4_2_Zinc4jet->Fill(deltaPhi(lep1, newFourthJ), deltaPhi(genLep1, genNewFourthJ), weight);
             }
             //-- Fifth Jet Pt
             if (nGoodGenJets >= 5 && nGoodJets >= 5){
@@ -2914,6 +3039,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 hresponseFifthJetEta_2_Zinc5jet->Fill(fabs(jets[4].eta), fabs(genJets[4].eta), weight);
                 hresponseJetsHT_1_Zinc5jet->Fill(jetsHT, genJetsHT, weight);
                 hresponseJetsHT_2_Zinc5jet->Fill(jetsHT, genJetsHT, weight);
+                
+                hresponsedPhiLepJet5_Zinc5jet->Fill(deltaPhi(lep1, newFifthJ), deltaPhi(genLep1, genNewFifthJ), weight);
+                hresponsedPhiLepJet5_2_Zinc5jet->Fill(deltaPhi(lep1, newFifthJ), deltaPhi(genLep1, genNewFifthJ), weight);
             }
             //-- Sixth Jet Pt
             if (nGoodGenJets >= 6 && nGoodJets >= 6){
@@ -3116,10 +3244,17 @@ ZJetsAndDPS::ZJetsAndDPS(string fileName_, float lumiScale_, float puScale_, boo
     if (fileName.find("Data") != string::npos ) isData = true;
     if ( fileName.find("SMu_") == 0 || fileName.find("SE_") == 0 ) fullFileName =  "../DataW/" + fileName;
     if (fileName.find("Sherpa2") != string::npos) fullFileName =  "../DataSherpa2/" + fileName;
+    if (fileName.find("HEJ") != string::npos) fullFileName =  "../DataHEJ/" + fileName;
     if (fileName.find("List") == string::npos){
         if (fileName.find("Sherpa2") != string::npos){
             fullFileName += ".root";
             string treePath = fullFileName + "/tree";
+            cout << "Loading file: " << fullFileName << endl;
+            chain->Add(treePath.c_str());
+        }
+        else if (fileName.find("HEJ") != string::npos){
+            fullFileName += ".root";
+            string treePath = fullFileName + "/tree/tree;13";
             cout << "Loading file: " << fullFileName << endl;
             chain->Add(treePath.c_str());
         }
@@ -3348,7 +3483,8 @@ void ZJetsAndDPS::Init(bool hasRecoInfo, bool hasGenInfo, bool hasPartonInfo){
                 fileName.find("Powheg") != string::npos || 
                 fileName.find("P8") != string::npos || 
                 fileName.find("TopReweighting") != string::npos ||
-                fileName.find("Z2") != string::npos){
+                fileName.find("Z2") != string::npos ||
+                fileName.find("HEJ") != string::npos ){
 
             fChain->SetBranchAddress("pdfInfo_", &pdfInfo_, &b_pdfInfo_);
             fChain->SetBranchAddress("genLepId_", &genLepId_, &b_genLepId_);
@@ -3368,7 +3504,7 @@ void ZJetsAndDPS::Init(bool hasRecoInfo, bool hasGenInfo, bool hasPartonInfo){
                 fChain->SetBranchAddress("mcSherpaWeights_", &mcSherpaWeights_, &b_mcSherpaWeights_);
             }
             
-            if (fileName.find("Sherpa2") != string::npos){
+            if (fileName.find("Sherpa2") != string::npos || fileName.find("HEJ") != string::npos){
                 fChain->SetBranchAddress("mcSherpaWeights_", &mcSherpaWeights_, &b_mcSherpaWeights_);
             }
 
