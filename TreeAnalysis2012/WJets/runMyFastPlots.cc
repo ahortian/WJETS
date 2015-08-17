@@ -16,13 +16,15 @@
         gROOT->ProcessLine(string(".L " + srcdir + sources[i] + ".cc++").c_str());
         //gROOT->LoadMacro(string(srcdir + sources[i] + ".cc++").c_str());
     }
+
         
-    myFastPlots("SMu", "ZNGoodJets_Zinc", false);
-    //myFastPlots("SMu", "ZNGoodJets_Zinc", true);
 
     myFastPlots("SMu", "ZNGoodJets_Zexc", false);
     //myFastPlots("SMu", "ZNGoodJets_Zexc", true);
-        
+ 
+    //myFastPlots("SMu", "ZNGoodJets_Zinc", false);
+    //myFastPlots("SMu", "ZNGoodJets_Zinc", true);
+ 
     myFastPlots("SMu", "FirstJetPt_Zinc1jet", false);
     //myFastPlots("SMu", "FirstJetPt_Zinc1jet", true);
 
@@ -110,7 +112,21 @@
     //myFastPlots("SMu", "diJetPt_Zinc3jet", true);
     myFastPlots("SMu", "diJetPt_Zinc4jet", false);
     //myFastPlots("SMu", "diJetPt_Zinc4jet", true);
-
+        
+    //--
+    myFastPlots("SMu", "dPhiLepJet1_Zinc1jet", false);
+    //myFastPlots("SMu", "dPhiLepJet1_Zinc1jet", true);
+    myFastPlots("SMu", "dPhiLepJet2_Zinc2jet", false);
+    //myFastPlots("SMu", "dPhiLepJet2_Zinc2jet", true);
+    myFastPlots("SMu", "dPhiLepJet3_Zinc3jet", false);
+    //myFastPlots("SMu", "dPhiLepJet3_Zinc3jet", true);
+    myFastPlots("SMu", "dPhiLepJet4_Zinc4jet", false);
+    //myFastPlots("SMu", "dPhiLepJet4_Zinc4jet", true);
+    myFastPlots("SMu", "dPhiLepJet5_Zinc5jet", false);
+    //myFastPlots("SMu", "dPhiLepJet5_Zinc5jet", true);
+        
+        
+        
         /*
          myFastPlots("SMu", "FirstJetPt_1_Zinc1jet", false);
          myFastPlots("SMu", "SecondJetPt_1_Zinc2jet", false);

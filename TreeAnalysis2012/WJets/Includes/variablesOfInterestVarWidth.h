@@ -14,7 +14,7 @@ struct variableStruct{
 
 //--- W Jets ------------------------------------
 
-const int NVAROFINTERESTWJETS(48);
+const int NVAROFINTERESTWJETS(52);
 variableStruct VAROFINTERESTWJETS[] = {
     //--  Name  ----------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE
     {"ZNGoodJets_Zexc",             1,      1,           4,              5,             4,            3,           7}, //0
@@ -72,22 +72,31 @@ variableStruct VAROFINTERESTWJETS[] = {
     {"dRJets_Zinc2jet",                     1,      1,           3,              4,             2,            2,           7}, //36
     
     //-- dijet properties
-    {"diJetMass_Zinc2jet",                  1,      1,           3,              10,            2,            2,           7},
-    {"diJetMass_Zinc3jet",                  1,      1,           3,              10,            2,            2,           7},
-    {"diJetMass_Zinc4jet",                  1,      1,           3,              4,             2,            2,           7},
+    //{"diJetMass_Zinc2jet",                  1,      1,           3,              10,            2,            2,           7},
+    //{"diJetMass_Zinc3jet",                  1,      1,           3,              10,            2,            2,           7},
+    {"diJetMass_Zinc2jet",                  1,      1,           3,              5,            2,            2,           7},
+    {"diJetMass_Zinc3jet",                  1,      1,           3,              4,            2,            2,           7},
+    {"diJetMass_Zinc4jet",                  1,      1,           3,              4,             2,            2,           7}, //39
     
     {"diJetPt_Zinc2jet",                    1,      1,           3,              4,             2,            2,           7},
     {"diJetPt_Zinc3jet",                    1,      1,           3,              4,             2,            2,           7},
     {"diJetPt_Zinc4jet",                    1,      1,           3,              4,             2,            2,           7}, //42
     
+    //-- dPhiLepJet
+    {"dPhiLepJet1_Zinc1jet",                1,      0,           3,              4,             2,            2,           7},
+    {"dPhiLepJet2_Zinc2jet",                1,      0,           3,              4,             2,            2,           7},
+    {"dPhiLepJet3_Zinc3jet",                1,      0,           3,              4,             2,            2,           7},
+    {"dPhiLepJet4_Zinc4jet",                1,      0,           3,              4,             2,            2,           7},
+    {"dPhiLepJet5_Zinc5jet",                1,      0,           3,              4,             2,            2,           7}, //47
+    
     // Mean number of Jets
     {"MeanNJetsHT_Zinc1jet",                0,      0,           8,              6,             9,            3,           7},
     {"MeanNJetsHT_Zinc2jet",                0,      0,          10,              8,            10,            4,           7},
     {"MeanNJetsdRapidity_Zinc2jet",         0,      0,           7,              3,             7,            5,           7},
-    {"MeanNJetsdRapidityFB_Zinc2jet",       0,      0,           6,              2,             5,            9,           7}, //46
+    {"MeanNJetsdRapidityFB_Zinc2jet",       0,      0,           6,              2,             5,            9,           7}, //51
     
     //--  Name  ------------------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE
-    {"ZNGoodJets_Zinc",                     1,      1,           4,              4,             4,            3,           7}, //47
+    //{"ZNGoodJets_Zinc",                     1,      1,           4,              4,             4,            3,           7}, //47
         
 };
 

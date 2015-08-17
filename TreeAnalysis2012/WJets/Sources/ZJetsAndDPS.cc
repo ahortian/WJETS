@@ -27,15 +27,12 @@
 
 using namespace std;
 
-TRandom3* RandGen = new TRandom3();
-TRandom3* Rand_MER_Gen = new TRandom3();
 
 ClassImp(ZJetsAndDPS);
 
 void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSign, bool doInvMassCut, 
         int doBJets, int doPUStudy, bool doFlat, bool useRoch, bool doVarWidth,  bool hasPartonInfo, string pdfSet, int pdfMember)
 {
-    RandGen->SetSeed(0); // set random seed
     
     //--- Initialize PDF from LHAPDF if needed ---
     if (pdfSet != "") {
@@ -169,7 +166,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     if (systematics == 7 && direction == -1) muScale = 0.998;
     
     bool doMer(false); // the number used for MER : 0.006
-    double merUncer(0); Rand_MER_Gen->SetSeed(0); // set random seed; 0.006
+    double merUncer(0);
     if (systematics == 8 && direction ==  1) doMer = true;
     
     // Wb study
@@ -183,6 +180,12 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     //int smearLepSF(0);
     //if ((systematics == 5 || systematics == 6) && direction ==  1) smearLepSF = 1;
     //if ((systematics == 5 || systematics == 6) && direction == -1) smearLepSF = -1;
+    
+    TRandom3* RandGen = new TRandom3();
+    if (sysBtagSF != 0) RandGen->SetSeed(333);
+    
+    TRandom3* Rand_MER_Gen = new TRandom3();
+    //Rand_MER_Gen->SetSeed(0); // set random seed to random
 
     //==========================================================================================================//
 
