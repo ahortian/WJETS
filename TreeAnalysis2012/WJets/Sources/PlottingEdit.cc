@@ -419,7 +419,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     
     hisUnfolded->SetTitle("");
     if (variable.find("ZNGoodJets") != string::npos) {
-        hisUnfolded->GetXaxis()->SetRange(2, 8);
+        hisUnfolded->GetXaxis()->SetRange(1, 8);
     }
     hisUnfolded->GetYaxis()->SetTitle(temp.c_str());
     hisUnfolded->GetYaxis()->SetTitleSize(0.04);
@@ -962,7 +962,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     string titleCan1 = "Systematic Up : " + variable;
     
     if (variable.find("ZNGoodJets") != string::npos){
-        hUpDiffer[0]->GetXaxis()->SetRange(2, 8);
+        hUpDiffer[0]->GetXaxis()->SetRange(1, 8);
     }
     hUpDiffer[0]->SetMaximum(1000);
     hUpDiffer[0]->SetMinimum(0.1);
@@ -1082,7 +1082,7 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
     string titleCan2 = "Systematic Down : " + variable;
     
     if (variable.find("ZNGoodJets") != string::npos){
-        hDownDiffer[0]->GetXaxis()->SetRange(2, 8);
+        hDownDiffer[0]->GetXaxis()->SetRange(1, 8);
     }
     hDownDiffer[0]->SetMaximum(1000);
     hDownDiffer[0]->SetMinimum(0.1);
@@ -1407,6 +1407,11 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
         
         genBhatALL->SetBinContent(i, binContentInc);
         genBhatALL->SetBinError(i, binErrorInc);
+        
+        if (i == 1){
+            genBhatALL->SetBinContent(i, 0.0);
+            genBhatALL->SetBinError(i, 0.0);
+        }
     }
     
     for(int i = 1; i <= nBins; i++){
@@ -1489,7 +1494,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     
     hisUnfolded->SetTitle("");
     if (variable.find("ZNGoodJets") != string::npos) {
-        hisUnfolded->GetXaxis()->SetRange(2, 8);
+        hisUnfolded->GetXaxis()->SetRange(1, 8);
     }
     hisUnfolded->GetYaxis()->SetTitle(temp.c_str());
     hisUnfolded->GetYaxis()->SetTitleSize(0.04);
@@ -1810,7 +1815,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     data3->GetXaxis()->SetBinLabel(9, "#geq 8");
     data3->GetXaxis()->SetBinLabel(10,"#geq 9");
     data3->GetXaxis()->SetBinLabel(11,"#geq 10");
-    data3->GetXaxis()->SetRange(2, 8);
+    data3->GetXaxis()->SetRange(1, 8);
     
     
     data3->SetTitle("");

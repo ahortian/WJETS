@@ -78,10 +78,10 @@ const xsecVariableStruct xsecVarNames[] = {
     {"diJetPt_Zinc3jet",                        "diJetPt_inc3jet",          "diJetPtjet3"},
     {"diJetPt_Zinc4jet",                        "diJetPt_inc4jet",          "diJetPtjet4"}, //42
     
-    {"dPhiLepJet1_Zinc1jet",                    "NA",              "NA"},
-    {"dPhiLepJet2_Zinc2jet",                    "NA",              "NA"},
-    {"dPhiLepJet3_Zinc3jet",                    "NA",              "NA"},
-    {"dPhiLepJet4_Zinc4jet",                    "NA",              "NA"},
+    {"dPhiLepJet1_Zinc1jet",                    "NA",              "dphijet1muon"},
+    {"dPhiLepJet2_Zinc2jet",                    "NA",              "dphijet2muon"},
+    {"dPhiLepJet3_Zinc3jet",                    "NA",              "dphijet3muon"},
+    {"dPhiLepJet4_Zinc4jet",                    "NA",              "dphijet4muon"},
     {"dPhiLepJet5_Zinc5jet",                    "NA",              "NA"}, //47
     
     //-- Mean number of Jets

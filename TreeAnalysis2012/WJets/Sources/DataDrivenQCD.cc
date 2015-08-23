@@ -191,84 +191,91 @@ void FuncDataDrivenQCD(string variable, TFile *fData[], TFile *fMC[][14], TFile 
     double NormFactor_o[15], NormFactorISO_o[15], NormFactIsoError_o[15];
     
     if (variable.find("ZNGoodJets") == string::npos){
-        
+        double NormFactor(1);
         // step 0 : initial normalization of Wjets and data
-        double NormFactor = (hData[0]->Integral() - hBack[0]->Integral() ) / hSignal[0]->Integral() ;
-        cout << " normalization of signal " << NormFactor << "   " << hData[0]->Integral() << "   " << hSignal[0]->Integral() << "   " <<  hBack[0]->Integral() << endl;
-        /*
-        // for a quick look at QCD contribution in each region
-        for ( int i = 0  ; i < NQCD ; i++){
-            cout << "initial integral (Data - MC) QCD " << i << " : " << hData[i]->Integral() - ( hBack[i]->Integral() + hSignal[i]->Integral() ) << "integral signal" << hSignal[i]->Integral() << endl;
+        if ((hData[0]->Integral() - hBack[0]->Integral() ) < 0){
+            hQCD[0] = NULL;
         }
-        */
-        
-        // 12 iterations to make sure the stability is achieved
-        for ( int j = 0  ; j < 12 ; j++){
-            // recalculate NormFactor by including QCD[0]
-            if ( j > 0 )  NormFactor = (hData[0]->Integral() - hBack[0]->Integral() - hQCD[0] ->Integral() ) / hSignal[0]->Integral() ;
-            cout << " NormFactor f_w : " << NormFactor << endl;
+        else{
+            NormFactor = (hData[0]->Integral() - hBack[0]->Integral() ) / hSignal[0]->Integral() ;
+            cout << " normalization of signal " << NormFactor << "   " << hData[0]->Integral() << "   " << hSignal[0]->Integral() << "   " <<  hBack[0]->Integral() << endl;
             
-            // step 1:
+            // for a quick look at QCD contribution in each region
             for ( int i = 0  ; i < NQCD ; i++){
-                scaledMC[i] = (TH1D*) hSignal[i]->Clone();
-                scaledMC[i]->Scale(NormFactor) ;
-                hQCD[i] = (TH1D*) hData[i]->Clone();
-                hQCD[i]->Add(scaledMC[i],-1);
-                hQCD[i]->Add(hBack[i],-1);
-                // set the negative bins to 0
-                for ( int k = 0 ; k < hData[i]->GetNbinsX()+1 ; k++ ){
-                    if ( hQCD[i]->GetBinContent(k) <= 0 ) {
-                        hQCD[i]->SetBinContent(k, 0. ) ;
-                        hQCD[i]->SetBinError(k, 0. ) ;
+                cout << "initial integral (Data - MC) QCD " << i << " : " << hData[i]->Integral() - ( hBack[i]->Integral() + hSignal[i]->Integral() ) << " integral signal " << hSignal[i]->Integral() << endl;
+            }
+            
+            // 12 iterations to make sure the stability is achieved
+            for ( int j = 0  ; j < 12 ; j++){
+                // recalculate NormFactor by including QCD[0]
+                if ( j > 0 ) {
+                    NormFactor = (hData[0]->Integral() - hBack[0]->Integral() - hQCD[0] ->Integral() ) / hSignal[0]->Integral() ;
+                }
+                cout << " NormFactor f_w : " << NormFactor << endl;
+                
+                // step 1:
+                for ( int i = 0  ; i < NQCD ; i++){
+                    scaledMC[i] = (TH1D*) hSignal[i]->Clone();
+                    scaledMC[i]->Scale(NormFactor) ;
+                    hQCD[i] = (TH1D*) hData[i]->Clone();
+                    hQCD[i]->Add(scaledMC[i],-1);
+                    hQCD[i]->Add(hBack[i],-1);
+                    // set the negative bins to 0
+                    for ( int k = 0 ; k < hData[i]->GetNbinsX()+1 ; k++ ){
+                        if ( hQCD[i]->GetBinContent(k) <= 0 ) {
+                            hQCD[i]->SetBinContent(k, 0. ) ;
+                            hQCD[i]->SetBinError(k, 0. ) ;
+                        }
+                    }
+                    
+                    //double NormTemp =  hData[i]->Integral() / (scaledMC[i] ->Integral() + hBack[i]->Integral()) ;
+                    //cout << " data vs MC : " << i << "  " << NormTemp << "   " << hData[i]->Integral() << "   " << scaledMC[i] ->Integral() + hBack[i]->Integral() <<  endl;
+                }
+                //cout << " QCD intgral A B C and D   " << hQCD[0]->Integral() << "   " << hQCD[1]->Integral() << "   " << hQCD[2]->Integral() << "  " << hQCD[3]->Integral() <<  endl;
+                
+                // step 2: isoaltion fake rate
+                double NormFactorISO(0);
+                double NormFactIsoError(0);
+                double errhqcd1(0), errhqcd3(0), inthqcd1(0), inthqcd3(0);
+                if ( hQCD[3]->Integral() > 0 && hQCD[1]->Integral() > 0){
+                    inthqcd1 = hQCD[1]->IntegralAndError(1, hData[0]->GetNbinsX(), errhqcd1);
+                    inthqcd3 = hQCD[3]->IntegralAndError(1, hData[0]->GetNbinsX(), errhqcd3);
+                    
+                    NormFactorISO = inthqcd1/inthqcd3;
+                    NormFactIsoError = NormFactorISO * sqrt( pow( (errhqcd1/inthqcd1), 2) + pow( (errhqcd3/inthqcd3), 2) );
+                }
+                cout << " ratio of regions B to D   " << NormFactorISO << "   " << hQCD[1]->Integral() << "   " << hQCD[3]->Integral() <<  endl;
+                
+                // step 3 : isolation fake-rate from step 2 is aplied to QCD[2] to get QCD[0]
+                for (int m = 1; m <= hQCD[0]->GetNbinsX(); m++){
+                    hQCD[0]->SetBinContent(m, NormFactorISO * hQCD[2]->GetBinContent(m));
+                    if ( hQCD[0]->GetBinContent(m) > 0){
+                        // this condition ensures that both NormFactorISO and hQCD[2] != 0
+                        hQCD[0]->SetBinError(m, hQCD[0]->GetBinContent(m) * sqrt( pow((NormFactIsoError/NormFactorISO), 2) + pow((hQCD[2]->GetBinError(m)/hQCD[2]->GetBinContent(m)), 2)));
+                    }
+                    else {
+                        hQCD[0]->SetBinError(m, 0.);
                     }
                 }
+                // Note: the only quantity that keeps updating is NormFactor and we treat it as constant without uncertainty. So, the uncertainty in QCD[i] is determined by the operation in the last loop, although we do calculate it in every loop. For QCD[0], the uncertainty also include the error in NormFactorISO.
                 
-                //double NormTemp =  hData[i]->Integral() / (scaledMC[i] ->Integral() + hBack[i]->Integral()) ;
-                //cout << " data vs MC : " << i << "  " << NormTemp << "   " << hData[i]->Integral() << "   " << scaledMC[i] ->Integral() + hBack[i]->Integral() <<  endl;
+                NormFactorISO_o[0] = NormFactorISO;
+                NormFactIsoError_o[0] = NormFactIsoError;
             }
-            //cout << " QCD intgral A B C and D   " << hQCD[0]->Integral() << "   " << hQCD[1]->Integral() << "   " << hQCD[2]->Integral() << "  " << hQCD[3]->Integral() <<  endl;
             
-            // step 2: isoaltion fake rate
-            double NormFactorISO(0);
-            double NormFactIsoError(0);
-            double errhqcd1(0), errhqcd3(0), inthqcd1(0), inthqcd3(0);
-            if ( hQCD[3]->Integral() > 0 && hQCD[1]->Integral() > 0){
-                inthqcd1 = hQCD[1]->IntegralAndError(1, hData[0]->GetNbinsX(), errhqcd1);
-                inthqcd3 = hQCD[3]->IntegralAndError(1, hData[0]->GetNbinsX(), errhqcd3);
-                
-                NormFactorISO = inthqcd1/inthqcd3;
-                NormFactIsoError = NormFactorISO * sqrt( pow( (errhqcd1/inthqcd1), 2) + pow( (errhqcd3/inthqcd3), 2) );
-            }
-            cout << " ratio of regions B to D   " << NormFactorISO << "   " << hQCD[1]->Integral() << "   " << hQCD[3]->Integral() <<  endl;
+            NormFactor_o[0] = NormFactor;
+            cout << "   print out error for " << variable << endl;
+            cout << " NormFactorISO_o = " << NormFactorISO_o[0] << " Error = " << NormFactIsoError_o[0] << endl;
             
-            // step 3 : isolation fake-rate from step 2 is aplied to QCD[2] to get QCD[0]
-            for (int m = 1; m <= hQCD[0]->GetNbinsX(); m++){
-                hQCD[0]->SetBinContent(m, NormFactorISO * hQCD[2]->GetBinContent(m));
-                if ( hQCD[0]->GetBinContent(m) > 0){
-                    // this condition ensures that both NormFactorISO and hQCD[2] != 0
-                    hQCD[0]->SetBinError(m, hQCD[0]->GetBinContent(m) * sqrt( pow((NormFactIsoError/NormFactorISO), 2) + pow((hQCD[2]->GetBinError(m)/hQCD[2]->GetBinContent(m)), 2)));
-                }
-                else {
-                    hQCD[0]->SetBinError(m, 0.);
-                }
-            }
-            // Note: the only quantity that keeps updating is NormFactor and we treat it as constant without uncertainty. So, the uncertainty in QCD[i] is determined by the operation in the last loop, although we do calculate it in every loop. For QCD[0], the uncertainty also include the error in NormFactorISO.
-            
-            NormFactorISO_o[0] = NormFactorISO;
-            NormFactIsoError_o[0] = NormFactIsoError;
+            // the folowing lines are for scaling the MT dist and are outdated
+            /*
+             if (variable == "MT"){
+             cout << "This is MT : >> scaling...." << endl;
+             hQCD[0]->Scale(1.33313/1.15459);
+             }
+             */
         }
         
-        NormFactor_o[0] = NormFactor;
-        cout << "   print out error for " << variable << endl;
-        cout << " NormFactorISO_o = " << NormFactorISO_o[0] << " Error = " << NormFactIsoError_o[0] << endl;
-        
-        // the folowing lines are for scaling the MT dist and are outdated
-        /*
-        if (variable == "MT"){
-            cout << "This is MT : >> scaling...." << endl;
-            hQCD[0]->Scale(1.33313/1.15459);
-        }
-        */
     }
     else{
         // for ZNGoodJets dist.
@@ -279,62 +286,75 @@ void FuncDataDrivenQCD(string variable, TFile *fData[], TFile *fMC[][14], TFile 
         
         for (int m = 1; m <= hData[0]->GetNbinsX(); m++){
             cout << " -------- processing binth : " << m << endl;
-            // step 0 : initial normalization of Wjets and data
-            double NormFactor(1);
-            if(hSignal[0]->GetBinContent(m) > 0){NormFactor = (hData[0]->GetBinContent(m) - hBack[0]->GetBinContent(m)) / hSignal[0]->GetBinContent(m) ;}
-            else {NormFactor = 1.;}
             
-            for ( int j = 0  ; j < 12 ; j++){
-                if ( j > 0 )  {
-                    if(hSignal[0]->GetBinContent(m) > 0 ){
-                        NormFactor = (hData[0]->GetBinContent(m) - hBack[0]->GetBinContent(m) - hQCD[0]->GetBinContent(m) ) / hSignal[0]->GetBinContent(m) ;
-                    }
-                    else {
-                        NormFactor = 1. ;
-                    }
-                }
-                
-                // step 1:
-                for ( int i = 0  ; i < NQCD ; i++){
-                    scaledMC[i]->SetBinContent(m, NormFactor * hSignal[i]->GetBinContent(m));
-                    scaledMC[i]->SetBinError(m, NormFactor * hSignal[i]->GetBinError(m));
-                    
-                    hQCD[i]->SetBinContent(m, hData[i]->GetBinContent(m) - (scaledMC[i]->GetBinContent(m) + hBack[i]->GetBinContent(m)) );
-                    hQCD[i]->SetBinError(m,  sqrt(pow(hData[i]->GetBinError(m), 2) + pow(scaledMC[i]->GetBinError(m), 2) + pow(hBack[i]->GetBinError(m), 2)) );
-                    
-                    // set the negative bins to 0
-                    if ( hQCD[i]->GetBinContent(m) <= 0 ) {
-                        hQCD[i]->SetBinContent(m, 0. ) ;
-                        hQCD[i]->SetBinError(m, 0. ) ;
-                    }
-                }
-                //cout << " QCD intgral A B C and D   " << hQCD[0]->GetBinContent(m) << "   " << hQCD[1]->GetBinContent(m) << "   " << hQCD[2]->GetBinContent(m) << "  " << hQCD[3]->GetBinContent(m) <<  endl;
-                
-                // step 2: isoaltion fake rate
-                double NormFactorISO(0);
-                double NormFactIsoError(0);
-                if ( hQCD[3]->GetBinContent(m) > 0 && hQCD[1]->GetBinContent(m) > 0 ) {
-                    NormFactorISO = hQCD[1]->GetBinContent(m) / hQCD[3]->GetBinContent(m);
-                    NormFactIsoError = NormFactorISO * sqrt( pow( (hQCD[1]->GetBinError(m)/hQCD[1]->GetBinContent(m) ), 2) + pow( (hQCD[3]->GetBinError(m)/hQCD[3]->GetBinContent(m) ), 2) );
-                }
-                cout << " ratio of regions B to D   " << NormFactorISO << "   " << hQCD[1]->GetBinContent(m) << "   " << hQCD[3]->GetBinContent(m) <<  endl;
-                cout << " NormFactor: " << NormFactor << " f_B/D = " << NormFactorISO << " Error (%) = " << NormFactIsoError*100/NormFactorISO << endl;
-                
-                // step 3 : isolation fake-rate from step 2 is aplied to QCD[2] to get QCD[0]
-                hQCD[0]->SetBinContent(m, NormFactorISO * hQCD[2]->GetBinContent(m));
-                if ( hQCD[0]->GetBinContent(m) > 0){
-                    hQCD[0]->SetBinError(m, hQCD[0]->GetBinContent(m) * sqrt( pow((NormFactIsoError/NormFactorISO), 2) + pow((hQCD[2]->GetBinError(m)/hQCD[2]->GetBinContent(m)), 2)));
+            double NormFactor(1);
+            // step 0 : initial normalization of Wjets and data
+            if ( (hData[0]->GetBinContent(m) - hBack[0]->GetBinContent(m)) < 0){
+                hQCD[0]->SetBinContent(m, 0.);
+                hQCD[0]->SetBinError(m, 0.);
+            }
+            else{
+                if(hSignal[0]->GetBinContent(m) > 0){
+                    NormFactor = (hData[0]->GetBinContent(m) - hBack[0]->GetBinContent(m)) / hSignal[0]->GetBinContent(m) ;
                 }
                 else {
-                    hQCD[0]->SetBinError(m, 0.);
+                    NormFactor = 1.;
                 }
                 
-                // Note: the only quantity that keeps updating is NormFactor and we treat it as constant without uncertainty. So, the uncertainty in QCD[i] is determined by the operation in the last loop, although we do calculate it in every loop. For QCD[0], the uncertainty also include the error in NormFactorISO.
-                
-                NormFactorISO_o[m] = NormFactorISO;
-                NormFactIsoError_o[m] = NormFactIsoError;
+                for ( int j = 0  ; j < 12 ; j++){
+                    if ( j > 0 )  {
+                        if(hSignal[0]->GetBinContent(m) > 0){
+                            NormFactor = (hData[0]->GetBinContent(m) - hBack[0]->GetBinContent(m) - hQCD[0]->GetBinContent(m) ) / hSignal[0]->GetBinContent(m) ;
+                        }
+                        else {
+                            NormFactor = 1. ;
+                        }
+                    }
+                    
+                    // step 1:
+                    for ( int i = 0  ; i < NQCD ; i++){
+                        scaledMC[i]->SetBinContent(m, NormFactor * hSignal[i]->GetBinContent(m));
+                        scaledMC[i]->SetBinError(m, NormFactor * hSignal[i]->GetBinError(m));
+                        
+                        hQCD[i]->SetBinContent(m, hData[i]->GetBinContent(m) - (scaledMC[i]->GetBinContent(m) + hBack[i]->GetBinContent(m)) );
+                        hQCD[i]->SetBinError(m,  sqrt(pow(hData[i]->GetBinError(m), 2) + pow(scaledMC[i]->GetBinError(m), 2) + pow(hBack[i]->GetBinError(m), 2)) );
+                        
+                        // set the negative bins to 0
+                        if ( hQCD[i]->GetBinContent(m) <= 0 ) {
+                            hQCD[i]->SetBinContent(m, 0. ) ;
+                            hQCD[i]->SetBinError(m, 0. ) ;
+                        }
+                    }
+                    //cout << " QCD intgral A B C and D   " << hQCD[0]->GetBinContent(m) << "   " << hQCD[1]->GetBinContent(m) << "   " << hQCD[2]->GetBinContent(m) << "  " << hQCD[3]->GetBinContent(m) <<  endl;
+                    
+                    // step 2: isoaltion fake rate
+                    double NormFactorISO(0);
+                    double NormFactIsoError(0);
+                    if ( hQCD[3]->GetBinContent(m) > 0 && hQCD[1]->GetBinContent(m) > 0 ) {
+                        NormFactorISO = hQCD[1]->GetBinContent(m) / hQCD[3]->GetBinContent(m);
+                        NormFactIsoError = NormFactorISO * sqrt( pow( (hQCD[1]->GetBinError(m)/hQCD[1]->GetBinContent(m) ), 2) + pow( (hQCD[3]->GetBinError(m)/hQCD[3]->GetBinContent(m) ), 2) );
+                    }
+                    cout << " ratio of regions B to D   " << NormFactorISO << "   " << hQCD[1]->GetBinContent(m) << "   " << hQCD[3]->GetBinContent(m) <<  endl;
+                    cout << " NormFactor: " << NormFactor << " f_B/D = " << NormFactorISO << " Error (%) = " << NormFactIsoError*100/NormFactorISO << endl;
+                    
+                    // step 3 : isolation fake-rate from step 2 is aplied to QCD[2] to get QCD[0]
+                    hQCD[0]->SetBinContent(m, NormFactorISO * hQCD[2]->GetBinContent(m));
+                    if ( hQCD[0]->GetBinContent(m) > 0){
+                        hQCD[0]->SetBinError(m, hQCD[0]->GetBinContent(m) * sqrt( pow((NormFactIsoError/NormFactorISO), 2) + pow((hQCD[2]->GetBinError(m)/hQCD[2]->GetBinContent(m)), 2)));
+                    }
+                    else {
+                        hQCD[0]->SetBinError(m, 0.);
+                    }
+                    
+                    // Note: the only quantity that keeps updating is NormFactor and we treat it as constant without uncertainty. So, the uncertainty in QCD[i] is determined by the operation in the last loop, although we do calculate it in every loop. For QCD[0], the uncertainty also include the error in NormFactorISO.
+                    
+                    NormFactorISO_o[m] = NormFactorISO;
+                    NormFactIsoError_o[m] = NormFactIsoError;
+                }
+                NormFactor_o[m] = NormFactor;
             }
-            NormFactor_o[m] = NormFactor;
+            
+            
         }
         
         cout << "   print out error for " << variable << endl;
