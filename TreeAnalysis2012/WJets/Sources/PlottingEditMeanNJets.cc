@@ -559,9 +559,9 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend->SetFillStyle(1001);
     legend->SetBorderSize(1);
     legend->AddEntry(hisUnfolded, "Data", "PLEF");
-    legend->AddEntry(genMad, "MG+Py6 at NNLO Stat. Error", "plef");
-    legend->AddEntry(genBhatALL, "BlackHat at NLO Stat. Error", "plef");
-    legend->AddEntry(genShe, "Sherpa2 Stat. Error", "plef");
+    legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
+    legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
+    legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
     legend->Draw();
     //------------------
     
@@ -671,8 +671,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     
     data1->SetTitle("");
     data1->GetYaxis()->SetRangeUser(0.41,1.59);
-    data1->GetYaxis()->SetTitle("MC / Data");
-    data1->GetYaxis()->SetTitleSize(0.135);
+    data1->GetYaxis()->SetTitle("MG5/Data");
+    data1->GetYaxis()->SetTitleSize(0.13);
     data1->GetYaxis()->SetTitleOffset(0.44);
     data1->GetYaxis()->CenterTitle();
     data1->GetYaxis()->SetLabelSize(0.12);
@@ -699,7 +699,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend2 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend2->SetFillColor(0);
     legend2->SetFillStyle(ZJetsFillStyle);
     legend2->SetBorderSize(0);
@@ -713,6 +713,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend2->Draw("same");
     
     // Text Madgraph
+    /*
     TLatex *latexLabel0 = new TLatex();
     latexLabel0->SetTextSize(0.15);
     latexLabel0->SetTextFont(42);
@@ -720,7 +721,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     latexLabel0->SetTextColor(kAzure-5);
     latexLabel0->SetNDC();
     latexLabel0->DrawLatex(0.35,0.09,"Madgraph");
-    
+    */
     pad2->Draw();
     
     
@@ -738,8 +739,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     
     data2->SetTitle("");
     data2->GetYaxis()->SetRangeUser(0.41,1.59);
-    data2->GetYaxis()->SetTitle("MC / Data");
-    data2->GetYaxis()->SetTitleSize(0.135);
+    data2->GetYaxis()->SetTitle("BLACKHAT/Data");
+    data2->GetYaxis()->SetTitleSize(0.13);
     data2->GetYaxis()->SetTitleOffset(0.44);
     data2->GetYaxis()->CenterTitle();
     data2->GetYaxis()->SetLabelSize(0.12);
@@ -766,7 +767,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend3 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    TLegend *legend3 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend3->SetFillColor(0);
     legend3->SetFillStyle(ZJetsFillStyle);
     legend3->SetBorderSize(0);
@@ -780,6 +781,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend3->Draw("same");
     
     // Text BlackHat
+    /*
     TLatex *latexLabel1 = new TLatex();
     latexLabel1->SetTextSize(0.15);
     latexLabel1->SetTextFont(42);
@@ -787,7 +789,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     latexLabel1->SetTextColor(kOrange+2);
     latexLabel1->SetNDC();
     latexLabel1->DrawLatex(0.35,0.09,"BlackHat");
-    
+    */
     pad3->Draw();
     
     //--- NEW TPAD => pad4 ---//
@@ -804,8 +806,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     
     data3->SetTitle("");
     data3->GetYaxis()->SetRangeUser(0.41,1.59);
-    data3->GetYaxis()->SetTitle("MC / Data");
-    data3->GetYaxis()->SetTitleSize(0.1);
+    data3->GetYaxis()->SetTitle("SHERPA2/Data");
+    data3->GetYaxis()->SetTitleSize(0.096);
     data3->GetYaxis()->SetTitleOffset(0.6);
     data3->GetYaxis()->CenterTitle();
     data3->GetYaxis()->SetLabelSize(0.085);
@@ -837,7 +839,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend4 = new TLegend(0.16, 0.05, 0.42, 0.20);
+    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend4->SetFillColor(0);
     legend4->SetFillStyle(ZJetsFillStyle);
     legend4->SetBorderSize(0);
@@ -851,6 +853,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend4->Draw("same");
     
     // Text Sherpa (position not relative to pad4)
+    /*
     TLatex *latexLabel2 = new TLatex();
     latexLabel2->SetTextSize(0.11);
     latexLabel2->SetTextFont(42);
@@ -858,7 +861,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     latexLabel2->SetTextColor(kGreen+3);
     latexLabel2->SetNDC();
     latexLabel2->DrawLatex(0.35,0.34,"Sherpa");
-    
+    */
     pad4->Draw();
     can->cd();
     

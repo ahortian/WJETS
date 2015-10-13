@@ -22,13 +22,8 @@
     myFastPlots("SMu", "ZNGoodJets_Zexc", false);
     //myFastPlots("SMu", "ZNGoodJets_Zexc", true);
  
-    //myFastPlots("SMu", "ZNGoodJets_Zinc", false);
-    //myFastPlots("SMu", "ZNGoodJets_Zinc", true);
- 
     myFastPlots("SMu", "FirstJetPt_Zinc1jet", false);
     //myFastPlots("SMu", "FirstJetPt_Zinc1jet", true);
-
-
     myFastPlots("SMu", "SecondJetPt_Zinc2jet", false);
     //myFastPlots("SMu", "SecondJetPt_Zinc2jet", true);
     myFastPlots("SMu", "ThirdJetPt_Zinc3jet", false);
@@ -126,6 +121,8 @@
     //myFastPlots("SMu", "dPhiLepJet5_Zinc5jet", true);
         
         
+        //myFastPlots("SMu", "ZNGoodJets_Zinc", false);
+        //myFastPlots("SMu", "ZNGoodJets_Zinc", true);
         
         /*
          myFastPlots("SMu", "FirstJetPt_1_Zinc1jet", false);

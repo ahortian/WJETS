@@ -182,6 +182,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     //if ((systematics == 5 || systematics == 6) && direction == -1) smearLepSF = -1;
     
     TRandom3* RandGen = new TRandom3();
+    RandGen->SetSeed(22346);
     if (sysBtagSF != 0) RandGen->SetSeed(333);
     
     TRandom3* Rand_MER_Gen = new TRandom3();
