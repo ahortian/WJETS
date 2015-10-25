@@ -62,8 +62,7 @@ void PlottingEdit(int start, int end, bool doNPTB)
     //for (int i(0); i < 1 /*NVAROFINTEREST*/; i++) {
     if (end == -1) end = start + 1;
     for (int i(start); i < end /*NVAROFINTERESTZJETS*/; i++) {
-        if( VAROFINTERESTWJETS[i].name.find("Zinc4jet") != string::npos ||
-           VAROFINTERESTWJETS[i].name.find("Zinc5jet") != string::npos)
+        if(VAROFINTERESTWJETS[i].name.find("Zinc5jet") != string::npos)
         {
             FuncPlot2(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease, xsecVarNames[i].RivetName, xsecVarNames[i].BlackHatName);
         }
@@ -133,20 +132,23 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     //TH1D *genBhatALL = (TH1D*) f->Get("genBhat");
     
     
-    TFile *fBhat[3];
+    TFile *fBhat[4];
     fBhat[0] = new TFile("PNGFiles/BlackHat/W1j_all.root", "READ");
     fBhat[1] = new TFile("PNGFiles/BlackHat/W2j_all.root", "READ");
     fBhat[2] = new TFile("PNGFiles/BlackHat/W3j_all.root", "READ");
+    fBhat[3] = new TFile("PNGFiles/BlackHat/W4j_all.root", "READ");
     cout << " Opening: " << "W1j_all.root" << "   --->   Opened ? " << fBhat[0]->IsOpen() << endl;
     cout << " Opening: " << "W2j_all.root" << "   --->   Opened ? " << fBhat[1]->IsOpen() << endl;
     cout << " Opening: " << "W3j_all.root" << "   --->   Opened ? " << fBhat[2]->IsOpen() << endl;
+    cout << " Opening: " << "W4j_all.root" << "   --->   Opened ? " << fBhat[3]->IsOpen() << endl;
 
-    TH1D *genBhat[3];
+    TH1D *genBhat[4];
     TH1D *genBhatALL;
     if (variable == "ZNGoodJets_Zexc") {
         genBhat[0] = (TH1D*) fBhat[0]->Get("njet_WMuNu");
         genBhat[1] = (TH1D*) fBhat[1]->Get("njet_WMuNu");
         genBhat[2] = (TH1D*) fBhat[2]->Get("njet_WMuNu");
+        genBhat[3] = (TH1D*) fBhat[3]->Get("njet_WMuNu");
         genBhatALL = (TH1D*) genMad->Clone();
         for(int i = 1; i<= dataCentral->GetNbinsX(); i++){
             if (i==2) {
@@ -160,6 +162,10 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
             else if (i==4){
                 genBhatALL->SetBinContent(i, genBhat[2]->GetBinContent(i)/1000.);
                 genBhatALL->SetBinError  (i, genBhat[2]->GetBinError(i)/1000.);
+            }
+            else if (i==5){
+                genBhatALL->SetBinContent(i, genBhat[3]->GetBinContent(i)/1000.);
+                genBhatALL->SetBinError  (i, genBhat[3]->GetBinError(i)/1000.);
             }
             else {
                 genBhatALL->SetBinContent(i, 0);
@@ -182,6 +188,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         genBhat[0] = (TH1D*) fBhat[0]->Get(varBlackHatName.c_str()); genBhat[0]->Scale(0.001);
         genBhat[1] = (TH1D*) fBhat[1]->Get(varBlackHatName.c_str()); genBhat[1]->Scale(0.001);
         genBhat[2] = (TH1D*) fBhat[2]->Get(varBlackHatName.c_str()); genBhat[2]->Scale(0.001);
+        genBhat[3] = (TH1D*) fBhat[3]->Get(varBlackHatName.c_str()); genBhat[3]->Scale(0.001);
         
         if (variable.find("Zinc1jet") != string::npos){
             genBhatALL = (TH1D*) genBhat[0]->Clone();
@@ -194,6 +201,10 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         else if (variable.find("Zinc3jet") != string::npos) {
             genBhatALL = (TH1D*) genBhat[2]->Clone();
             cout << " BH >> variable is Zinc3jet >> W3j_all.root is used" << endl;
+        }
+        else if (variable.find("Zinc4jet") != string::npos) {
+            genBhatALL = (TH1D*) genBhat[3]->Clone();
+            cout << " BH >> variable is Zinc4jet >> W4j_all.root is used" << endl;
         }
         else {
             genBhatALL = (TH1D*) genMad->Clone();
@@ -212,7 +223,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         cout << "got fHCorr: " << hisHCorr->Integral() << endl;
         
         if (variable == "ZNGoodJets_Zexc") {
-            for(int i = 2; i<= 4; i++){
+            for(int i = 2; i<= 5; i++){
                 genBhatALL->SetBinContent(i, genBhatALL->GetBinContent(i) * hisHCorr->GetBinContent(i));
                 genBhatALL->SetBinError  (i, genBhatALL->GetBinError(i) * hisHCorr->GetBinContent(i));
             }

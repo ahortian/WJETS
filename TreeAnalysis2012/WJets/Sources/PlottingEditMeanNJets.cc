@@ -115,13 +115,15 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     //TH1D *genBhatALL = (TH1D*) f->Get("genBhat");
     
     // if you want to do BH here then uncomment this part
-    TFile *fBhat[3];
+    TFile *fBhat[4];
     fBhat[0] = new TFile("PNGFiles/BlackHat/W1j_all.root", "READ");
     fBhat[1] = new TFile("PNGFiles/BlackHat/W2j_all.root", "READ");
     fBhat[2] = new TFile("PNGFiles/BlackHat/W3j_all.root", "READ");
+    fBhat[3] = new TFile("PNGFiles/BlackHat/W4j_all.root", "READ");
     cout << " Opening: " << "W1j_all.root" << "   --->   Opened ? " << fBhat[0]->IsOpen() << endl;
     cout << " Opening: " << "W2j_all.root" << "   --->   Opened ? " << fBhat[1]->IsOpen() << endl;
     cout << " Opening: " << "W3j_all.root" << "   --->   Opened ? " << fBhat[2]->IsOpen() << endl;
+    cout << " Opening: " << "W4j_all.root" << "   --->   Opened ? " << fBhat[3]->IsOpen() << endl;
     
     //-- matching variable name
     string varBlackHatName, varBlackHatName2;
@@ -198,12 +200,14 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         genBhatDeno[0] = (TH1D*) fBhat[0]->Get(varBlackHatName2_1.c_str()); genBhatDeno[0]->Scale(0.001);
         genBhatDeno[1] = (TH1D*) fBhat[1]->Get(varBlackHatName2_2.c_str()); genBhatDeno[1]->Scale(0.001);
         genBhatDeno[2] = (TH1D*) fBhat[2]->Get(varBlackHatName2_3.c_str()); genBhatDeno[2]->Scale(0.001);
-        genBhatDeno[3] = (TH1D*) fBhat[2]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
+        genBhatDeno[3] = (TH1D*) fBhat[3]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
+        genBhatDeno[4] = (TH1D*) fBhat[3]->Get(varBlackHatName2_5.c_str()); genBhatDeno[4]->Scale(0.001);
         
         genBhat[0] = (TH1D*) genBhatDeno[0]->Clone(); genBhat[0]->Scale(1.0);
         genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
         genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
         genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
+        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
         
         int nBinsX(genBhatDeno[0]->GetNbinsX());
         double xmin = genBhatDeno[0]->GetXaxis()->GetXmin();
@@ -216,13 +220,13 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         TH2D* genBhat2D;
         
         if (xBins == 0){
-            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 4, 0.5, 4.5);
+            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 5, 0.5, 5.5);
         }
         else{
-            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 4, 0.5, 4.5);
+            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 5, 0.5, 5.5);
         }
         
-        for (int j = 1; j<= 4; j++){
+        for (int j = 1; j<= 5; j++){
             for (int i = 1; i<= nBinsX; i++){
                 genBhat2D->SetBinContent(i, j, genBhatDeno[j-1]->GetBinContent(i));
                 genBhat2D->SetBinError(i, j, genBhatDeno[j-1]->GetBinError(i));
@@ -242,12 +246,14 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         genBhatDeno[0] = NULL;
         genBhatDeno[1] = (TH1D*) fBhat[1]->Get(varBlackHatName2_2.c_str()); genBhatDeno[1]->Scale(0.001);
         genBhatDeno[2] = (TH1D*) fBhat[2]->Get(varBlackHatName2_3.c_str()); genBhatDeno[2]->Scale(0.001);
-        genBhatDeno[3] = (TH1D*) fBhat[2]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
+        genBhatDeno[3] = (TH1D*) fBhat[3]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
+        genBhatDeno[4] = (TH1D*) fBhat[3]->Get(varBlackHatName2_5.c_str()); genBhatDeno[4]->Scale(0.001);
         
         genBhat[0] = NULL;
         genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
         genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
         genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
+        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
         
         
         genBhatDeno[0] = (TH1D*) genBhatDeno[1]->Clone();
@@ -267,13 +273,13 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         TH2D* genBhat2D;
         
         if (xBins == 0){
-            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 4, 0.5, 4.5);
+            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 5, 0.5, 5.5);
         }
         else{
-            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 4, 0.5, 4.5);
+            genBhat2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 5, 0.5, 5.5);
         }
         
-        for (int j = 1; j<= 4; j++){
+        for (int j = 1; j<= 5; j++){
             for (int i = 1; i<= nBinsX; i++){
                 genBhat2D->SetBinContent(i, j, genBhatDeno[j-1]->GetBinContent(i));
                 genBhat2D->SetBinError(i, j, genBhatDeno[j-1]->GetBinError(i));
@@ -296,6 +302,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         cout << " add exc3  " << genBhatMeanJ->GetBinContent(9) << endl;
         genBhatMeanJ->Add(genBhat[3]);
         cout << " add exc4  " << genBhatMeanJ->GetBinContent(9) << endl;
+        genBhatMeanJ->Add(genBhat[4]);
+        cout << " add exc5  " << genBhatMeanJ->GetBinContent(9) << endl;
         
         cout << "----- tot # events ---" << endl;
         genBhatDenoSum = (TH1D*) genBhatDeno[0]->Clone();
@@ -306,15 +314,19 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         cout << " add exc3  " << genBhatDenoSum->GetBinContent(9) << endl;
         genBhatDenoSum->Add(genBhatDeno[3]);
         cout << " add exc4  " << genBhatDenoSum->GetBinContent(9) << endl;
+        genBhatDenoSum->Add(genBhatDeno[4]);
+        cout << " add exc5  " << genBhatDenoSum->GetBinContent(9) << endl;
     }
     else {
         genBhatMeanJ = (TH1D*) genBhat[1]->Clone();
         genBhatMeanJ->Add(genBhat[2]);
         genBhatMeanJ->Add(genBhat[3]);
+        genBhatMeanJ->Add(genBhat[4]);
         
         genBhatDenoSum = (TH1D*) genBhatDeno[1]->Clone();
         genBhatDenoSum->Add(genBhatDeno[2]);
         genBhatDenoSum->Add(genBhatDeno[3]);
+        genBhatDenoSum->Add(genBhatDeno[4]);
     }
     
     genBhatMeanJ->Divide(genBhatDenoSum);
