@@ -442,8 +442,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         unit = unit.substr(0, unit.find("]"));
     }
     //--- temporary fix label: FIXME
-    if (variable.find("dRapidity") != string::npos) shortVar = "#Deltay";
-    if (variable.find("dRJets") != string::npos)    shortVar = "#DeltaR";
+    //if (variable.find("dRapidity") != string::npos) shortVar = "#Deltay";
+    //if (variable.find("dRJets") != string::npos)    shortVar = "#DeltaR";
     if (variable.find("diJetPt") != string::npos)    shortVar = "p_{T}";
     //---
     cout << shortVar << "   unit: " << unit << endl;
@@ -533,6 +533,16 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     //------------------
     
     //--- TLatex stuff ---
+    string njetStr;
+    if (variable.find("Zinc1jet") != string::npos){njetStr = " + #geq 1jet";}
+    else if (variable.find("Zinc2jet") != string::npos) {njetStr = " + #geq 2jets";}
+    else if (variable.find("Zinc3jet") != string::npos) {njetStr = " + #geq 3jets";}
+    else if (variable.find("Zinc4jet") != string::npos) {njetStr = " + #geq 4jets";}
+    else if (variable.find("Zinc5jet") != string::npos) {njetStr = " + #geq 5jets";}
+    else {njetStr = " channel";}
+    string procStr = "W (#rightarrow #mu#nu)" + njetStr;
+    
+    //--- TLatex stuff ---
     TLatex *latexLabel = new TLatex();
     latexLabel->SetNDC();
     latexLabel->SetTextSize(0.05);
@@ -544,10 +554,18 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     latexLabel->DrawLatex(0.20,0.95,"Preliminary");
     latexLabel->SetTextFont(42);
     latexLabel->DrawLatex(0.13,0.95-0.045,"19.6 fb^{-1} (8 TeV)");
-    latexLabel->DrawLatex(0.18,0.21-0.05,"anti-k_{T} (R = 0.5) Jets");
-    latexLabel->DrawLatex(0.18,0.21-0.11,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.4 ");
-    latexLabel->DrawLatex(0.18,0.21-0.17,"W#rightarrow #mu#nu channel");
-    latexLabel->SetName("latexLabel");
+    if (decrease){
+        latexLabel->DrawLatex(0.18,0.21-0.05,"anti-k_{T} (R = 0.5) Jets");
+        latexLabel->DrawLatex(0.18,0.21-0.11,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.4 ");
+        latexLabel->DrawLatex(0.18,0.21-0.17, procStr.c_str());
+        latexLabel->SetName("latexLabel");
+    }
+    else {
+        latexLabel->DrawLatex(0.58,0.21-0.05,"anti-k_{T} (R = 0.5) Jets");
+        latexLabel->DrawLatex(0.58,0.21-0.11,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.4 ");
+        latexLabel->DrawLatex(0.58,0.21-0.17, procStr.c_str());
+        latexLabel->SetName("latexLabel");
+    }
     latexLabel->Draw("same");
     
     
@@ -2716,7 +2734,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     latexLabel->DrawLatex(0.13,0.95-0.045,"19.6 fb^{-1} (8 TeV)");
     latexLabel->DrawLatex(0.18,0.21-0.05,"anti-k_{T} (R = 0.5) Jets");
     latexLabel->DrawLatex(0.18,0.21-0.11,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.4 ");
-    latexLabel->DrawLatex(0.18,0.21-0.17,"W#rightarrow #mu#nu channel");
+    latexLabel->DrawLatex(0.18,0.21-0.17,"W (#rightarrow #mu#nu) channel");
     latexLabel->SetName("latexLabel");
     latexLabel->Draw("same");
     
