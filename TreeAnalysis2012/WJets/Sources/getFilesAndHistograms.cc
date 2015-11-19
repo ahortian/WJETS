@@ -247,7 +247,8 @@ void getResps(RooUnfoldResponse *responses[], TFile *Files[], string variable)
 
 void getStatistics(string leptonFlavor, int JetPtMin, int JetPtMax, bool doFlat, bool doVarWidth, int doQCD, bool doSSign, bool doInvMassCut, int MET, int doBJets)
 {
-    std::string  variable = "ZNGoodJets_Zexc";
+    //std::string  variable = "ZNGoodJets_Zexc";
+    std::string  variable = "ZNGoodJetsFull_Zexc";
     string energy = getEnergy();
 
     std::cout <<" let us get jet multiplicity statistics " << std::endl;

@@ -738,7 +738,7 @@ TH1D* SFAnalyzeTTbar(string leptonFlavor, string variable, int JetPtMin, int Jet
     histScaleF->Divide(histoArr[nselTTbar]);
     
     // For ZNGoodJets_Zexc the 0-jet and 1-jet bins are irrelevant.
-    if (variable == "ZNGoodJets_Zexc") {
+    if (variable == "ZNGoodJets_Zexc" || variable == "ZNGoodJetsFull_Zexc") {
         histScaleF->SetBinContent(1, 1.0);
         histScaleF->SetBinError(1, 0.0);
         histScaleF->SetBinContent(2, 1.0);
@@ -914,13 +914,20 @@ TH1D* getHistoRespSystematics(string leptonFlavor, string variable, int JetPtMin
     const int nBinsFine(recoMad->GetNbinsX());
     double fwFirst[nBinsFine];
     cout << "----------- calculate scaling factor fw -------------" << endl;
+    string commandFwFile = "mkdir -p SFRespDir";
+    system(commandFwFile.c_str());
+    string fwOutFileName = "SFRespDir/FW_" + variable + ".txt";
+    ofstream fwOutFile (fwOutFileName.c_str());
+    
     for (int i = 1; i <= nBinsFine; i++){
         fwFirst[i] = 1;
         if ((recoMad->GetBinContent(i) > 0) & (measSubBG->Integral() > 0)){
             fwFirst[i] = (measSubBG->GetBinContent(i) / recoMad->GetBinContent(i)) * (recoMad->Integral() / measSubBG->Integral());
         }
         //cout << fwFirst[i] << endl;
+        fwOutFile << fwFirst[i] << endl;
     }
+    fwOutFile.close();
     
     //-- this is fwFirst[i] but set as histogram for plotting
     TH1D *histoFw = (TH1D*) measSubBG->Clone();

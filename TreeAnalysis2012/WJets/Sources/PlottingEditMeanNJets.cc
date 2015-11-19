@@ -34,12 +34,14 @@ using namespace std;
 
 //--- Declaring functions -------------
 void PlottingEditMeanNJets(int start = 0, int end = -1);
-void FuncPlot(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1);
+void FuncPlot(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1, string varRivetName = "njetWJet_excl", string varBlackHatName = "njet_WMuNu");
 
 //void GetSysErrorTable (string variable, string outputTableName, TH1D* dataCenBackUp = NULL, TH1D* hDiffer[] = {NULL}, TH1D* hStatError = NULL, TH1D* hTotalError = NULL, int nGroup = 10);
 
 void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dataCentral = NULL, TH1D* hSyst[] = NULL);
 TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC= NULL, string variable = "ZNGoodJets_Zexc");
+
+TH2D* get2DHisto(TFile *File, string variable = "MeanNJetsHT_Zinc1jet");
 //--------------------------------
 
 
@@ -59,14 +61,14 @@ void PlottingEditMeanNJets(int start, int end)
     //for (int i(0); i < 1 /*NVAROFINTEREST*/; i++) {
     if (end == -1) end = start + 1;
     for (int i(start); i < end /*NVAROFINTERESTZJETS*/; i++) {
-        FuncPlot(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease);
+        FuncPlot(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease, xsecVarNames[i].RivetName, xsecVarNames[i].BlackHatName);
     }
     
 }
 
-void FuncPlot(string variable, bool logZ, bool decrease)
+void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, string varBlackHatName)
 {
-    cout << "processing variable: " << variable << endl;
+    cout << "processing variable: " << variable << "  " << varBlackHatName << "  " << varRivetName << endl;
     string energy = getEnergy();
     if ( !isMuon ) leptonFlavor = "DE";
     gStyle->SetOptStat(0);
@@ -126,88 +128,41 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     cout << " Opening: " << "W4j_all.root" << "   --->   Opened ? " << fBhat[3]->IsOpen() << endl;
     
     //-- matching variable name
-    string varBlackHatName, varBlackHatName2;
-    string varBlackHatName1_1, varBlackHatName1_2, varBlackHatName1_3, varBlackHatName1_4, varBlackHatName1_5;
     string varBlackHatName2_1, varBlackHatName2_2, varBlackHatName2_3, varBlackHatName2_4, varBlackHatName2_5;
-    
-    //int useBHFile(0);
     if (variable == "MeanNJetsHT_Zinc1jet") {
-        varBlackHatName1_1 = "totNJhtExcjet1bin1";
-        varBlackHatName1_2 = "totNJhtExcjet2bin1";
-        varBlackHatName1_3 = "totNJhtExcjet3bin1";
-        varBlackHatName1_4 = "totNJhtExcjet4bin1";
-        varBlackHatName1_5 = "totNJhtExcjet5bin1";
-        
         varBlackHatName2_1 = "htExcjet1bin1";
         varBlackHatName2_2 = "htExcjet2bin1";
         varBlackHatName2_3 = "htExcjet3bin1";
         varBlackHatName2_4 = "htExcjet4bin1";
         varBlackHatName2_5 = "htExcjet5bin1";
-        
     }
     else if (variable == "MeanNJetsHT_Zinc2jet") {
-        
-        varBlackHatName1_2 = "totNJhtExcjet2bin2";
-        varBlackHatName1_3 = "totNJhtExcjet3bin2";
-        varBlackHatName1_4 = "totNJhtExcjet4bin2";
-        varBlackHatName1_5 = "totNJhtExcjet5bin2";
-        
         varBlackHatName2_2 = "htExcjet2bin2";
         varBlackHatName2_3 = "htExcjet3bin2";
         varBlackHatName2_4 = "htExcjet4bin2";
         varBlackHatName2_5 = "htExcjet5bin2";
-        
     }
     else if (variable == "MeanNJetsdRapidity_Zinc2jet") {
-        
-        varBlackHatName1_2 = "totNJdyj1j2Excjet2";
-        varBlackHatName1_3 = "totNJdyj1j2Excjet3";
-        varBlackHatName1_4 = "totNJdyj1j2Excjet4";
-        varBlackHatName1_5 = "totNJdyj1j2Excjet5";
-        
         varBlackHatName2_2 = "dyj1j2Excjet2";
         varBlackHatName2_3 = "dyj1j2Excjet3";
         varBlackHatName2_4 = "dyj1j2Excjet4";
         varBlackHatName2_5 = "dyj1j2Excjet5";
-        
-        
     }
     else if (variable == "MeanNJetsdRapidityFB_Zinc2jet") {
-        varBlackHatName1_2 = "totNJdyjFjBExcjet2";
-        varBlackHatName1_3 = "totNJdyjFjBExcjet3";
-        varBlackHatName1_4 = "totNJdyjFjBExcjet4";
-        varBlackHatName1_5 = "totNJdyjFjBExcjet5";
-        
         varBlackHatName2_2 = "dyjFjBExcjet2";
         varBlackHatName2_3 = "dyjFjBExcjet3";
         varBlackHatName2_4 = "dyjFjBExcjet4";
         varBlackHatName2_5 = "dyjFjBExcjet5";
-        
     }
     
-    TH1D *genBhat[5], *genBhatDeno[5];
-    
+    TH1D *genBhatDeno[5];
     TH1D* genBHMeanJ = NULL;
-    
     if (variable == "MeanNJetsHT_Zinc1jet") {
-        /*
-         genBhat[0] = (TH1D*) fBhat[0]->Get(varBlackHatName1_1.c_str()); genBhat[0]->Scale(0.001);
-         genBhat[1] = (TH1D*) fBhat[1]->Get(varBlackHatName1_2.c_str()); genBhat[1]->Scale(0.001);
-         genBhat[2] = (TH1D*) fBhat[2]->Get(varBlackHatName1_3.c_str()); genBhat[2]->Scale(0.001);
-         genBhat[3] = (TH1D*) fBhat[2]->Get(varBlackHatName1_4.c_str()); genBhat[3]->Scale(0.001);
-         
-         */
         genBhatDeno[0] = (TH1D*) fBhat[0]->Get(varBlackHatName2_1.c_str()); genBhatDeno[0]->Scale(0.001);
         genBhatDeno[1] = (TH1D*) fBhat[1]->Get(varBlackHatName2_2.c_str()); genBhatDeno[1]->Scale(0.001);
         genBhatDeno[2] = (TH1D*) fBhat[2]->Get(varBlackHatName2_3.c_str()); genBhatDeno[2]->Scale(0.001);
         genBhatDeno[3] = (TH1D*) fBhat[3]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
         genBhatDeno[4] = (TH1D*) fBhat[3]->Get(varBlackHatName2_5.c_str()); genBhatDeno[4]->Scale(0.001);
-        
-        genBhat[0] = (TH1D*) genBhatDeno[0]->Clone(); genBhat[0]->Scale(1.0);
-        genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
-        genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
-        genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
-        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
         
         int nBinsX(genBhatDeno[0]->GetNbinsX());
         double xmin = genBhatDeno[0]->GetXaxis()->GetXmin();
@@ -233,28 +188,14 @@ void FuncPlot(string variable, bool logZ, bool decrease)
             }
         }
         
-        
         genBHMeanJ = computeProject1DMeanNJets(genBhat2D, variable);
     }
-    
     else {
-        //genBhat[0] = NULL;
-        //genBhat[1] = (TH1D*) fBhat[1]->Get(varBlackHatName1_2.c_str()); genBhat[1]->Scale(0.001);
-        //genBhat[2] = (TH1D*) fBhat[2]->Get(varBlackHatName1_3.c_str()); genBhat[2]->Scale(0.001);
-        //genBhat[3] = (TH1D*) fBhat[2]->Get(varBlackHatName1_4.c_str()); genBhat[3]->Scale(0.001);
-        
         genBhatDeno[0] = NULL;
         genBhatDeno[1] = (TH1D*) fBhat[1]->Get(varBlackHatName2_2.c_str()); genBhatDeno[1]->Scale(0.001);
         genBhatDeno[2] = (TH1D*) fBhat[2]->Get(varBlackHatName2_3.c_str()); genBhatDeno[2]->Scale(0.001);
         genBhatDeno[3] = (TH1D*) fBhat[3]->Get(varBlackHatName2_4.c_str()); genBhatDeno[3]->Scale(0.001);
         genBhatDeno[4] = (TH1D*) fBhat[3]->Get(varBlackHatName2_5.c_str()); genBhatDeno[4]->Scale(0.001);
-        
-        genBhat[0] = NULL;
-        genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
-        genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
-        genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
-        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
-        
         
         genBhatDeno[0] = (TH1D*) genBhatDeno[1]->Clone();
         for (int i = 1; i<= genBhatDeno[1]->GetNbinsX(); i++){
@@ -288,11 +229,17 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         genBHMeanJ = computeProject1DMeanNJets(genBhat2D, variable);
     }
     
-    
+    //--- cross-check calculation
+    TH1D *genBhat[5];
     TH1D *genBhatMeanJ = NULL;
     TH1D *genBhatDenoSum = NULL;
-    
     if (variable == "MeanNJetsHT_Zinc1jet") {
+        genBhat[0] = (TH1D*) genBhatDeno[0]->Clone(); genBhat[0]->Scale(1.0);
+        genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
+        genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
+        genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
+        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
+
         cout << "----- tot N jets ---" << endl;
         genBhatMeanJ = (TH1D*) genBhat[0]->Clone();
         cout << " exc1      " << genBhatMeanJ->GetBinContent(9) << endl;
@@ -318,6 +265,12 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         cout << " add exc5  " << genBhatDenoSum->GetBinContent(9) << endl;
     }
     else {
+        genBhat[0] = NULL;
+        genBhat[1] = (TH1D*) genBhatDeno[1]->Clone(); genBhat[1]->Scale(2.0);
+        genBhat[2] = (TH1D*) genBhatDeno[2]->Clone(); genBhat[2]->Scale(3.0);
+        genBhat[3] = (TH1D*) genBhatDeno[3]->Clone(); genBhat[3]->Scale(4.0);
+        genBhat[4] = (TH1D*) genBhatDeno[4]->Clone(); genBhat[4]->Scale(5.0);
+        
         genBhatMeanJ = (TH1D*) genBhat[1]->Clone();
         genBhatMeanJ->Add(genBhat[2]);
         genBhatMeanJ->Add(genBhat[3]);
@@ -328,19 +281,112 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         genBhatDenoSum->Add(genBhatDeno[3]);
         genBhatDenoSum->Add(genBhatDeno[4]);
     }
-    
     genBhatMeanJ->Divide(genBhatDenoSum);
+    //---
+    
     cout << " average  " << genBhatMeanJ->GetBinContent(9) << "  "  << genBHMeanJ->GetBinContent(9) << endl;
     cout << " average  " << genBhatMeanJ->GetBinContent(10) << "  "  << genBHMeanJ->GetBinContent(10) << endl;
     
     TH1D *genBhatALL = (TH1D*) genBHMeanJ->Clone();
     //--- End Get BlackHat ------
     
+    //--- Get PDFs variation for BH ------
+    bool doPDFs(true);
+    if (doPDFs){
+        TH1D *BHpdfsUpALL;
+        TH1D *BHpdfsDnALL;
+        TH1D *BHscaleUpALL;
+        TH1D *BHscaleDnALL;
+        TH1D *BHscaleCenALL;
+        
+        if (varBlackHatName == "NA"){}
+        else{
+            //cout << "line th " << __LINE__ << endl;
+            TFile *fPDFs  = new TFile(("PNGFiles/BlackHatPDFs/PDFUncer_" + variable + "_histograms.root").c_str());
+            TFile *fscale = new TFile(("PNGFiles/BlackHatPDFs/PDFUncer_scale_vary_" + variable + "_histograms.root").c_str());
+            
+            //cout << "line th " << __LINE__ << endl;
+            BHpdfsUpALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_up");
+            //cout << "line th " << __LINE__ << endl;
+            BHpdfsDnALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_down");
+            //cout << "line th " << __LINE__ << endl;
+            BHscaleUpALL = (TH1D*) fscale->Get("CT10_scale_vary_up");
+            BHscaleDnALL = (TH1D*) fscale->Get("CT10_scale_vary_down");
+            BHscaleCenALL = (TH1D*) fscale->Get("CT10_scale_vary_cen");
+            
+            cout << BHscaleDnALL << " " << BHscaleDnALL->GetNbinsX() << endl;
+            
+//            BHpdfsUpALL->Scale(0.001);
+//            BHpdfsDnALL->Scale(0.001);
+//            BHscaleUpALL->Scale(0.001);
+//            BHscaleDnALL->Scale(0.001);
+//            BHscaleCenALL->Scale(0.001);
+            
+            if (BHscaleDnALL->GetNbinsX() == genBhatALL->GetNbinsX()){
+                BHpdfsUpALL->Add(genBhatALL, -1);
+                BHpdfsDnALL->Add(genBhatALL, -1);
+                BHscaleUpALL->Add(genBhatALL, -1);
+                BHscaleDnALL->Add(genBhatALL, -1);
+            }
+            else{
+                BHpdfsUpALL->Add(BHscaleCenALL, -1);
+                BHpdfsDnALL->Add(BHscaleCenALL, -1);
+                BHscaleUpALL->Add(BHscaleCenALL, -1);
+                BHscaleDnALL->Add(BHscaleCenALL, -1);
+            }
+            
+            for(int i = 1; i<= dataCentral->GetNbinsX(); i++){
+                double errpdfs(0);
+                double errscale(0);
+                
+                if (fabs(BHpdfsUpALL->GetBinContent(i)) >= fabs(BHpdfsDnALL->GetBinContent(i))) errpdfs = fabs(BHpdfsUpALL->GetBinContent(i));
+                else errpdfs = fabs(BHpdfsDnALL->GetBinContent(i));
+                
+                if (fabs(BHscaleUpALL->GetBinContent(i)) >= fabs(BHscaleDnALL->GetBinContent(i)) ) errscale = fabs(BHscaleUpALL->GetBinContent(i));
+                else errscale = fabs(BHscaleDnALL->GetBinContent(i));
+                
+                cout << "errscale " << errscale << " errpdfs " << errpdfs << " genBhatALL->GetBinError(i) " << genBhatALL->GetBinError(i) << endl;
+                
+                genBhatALL->SetBinError  (i, sqrt (pow(genBhatALL->GetBinError(i), 2) + pow(errpdfs, 2) + pow (errscale, 2) ));
+            }
+        }
+        
+    }
+    //------------------------
+    
+    
     //------ Get Sherpa ------
     //-- for getting Sherpa2
-    TH1D *genShe = (TH1D*) f->Get("genShe");
-    
+    //TH1D *genShe = (TH1D*) f->Get("genShe");
     //--- End Get Sherpa2 ------
+    
+    //------ Get Sherpa ------
+    //-- for getting sherpa2
+    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
+    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
+    TH2D *genShe2D = NULL;
+    string genName = "gen" + variable;
+    genShe2D = get2DHisto(fShe, genName);
+    TH1D* genShe = NULL;
+    genShe = computeProject1DMeanNJets(genShe2D, genName);
+    //--- End Get Sherpa -----
+
+    
+    //------ Get amcnlo ------
+    TFile *famcnlo = new TFile("PNGFiles/amcnlo/wjets_mcnlo.root");
+    cout << " Opening: " << "wjets_mcnlo.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
+    
+    string denoVar;
+    if (variable == "MeanNJetsHT_Zinc1jet") denoVar = "addJetsHT_inc1jet";
+    else if (variable == "MeanNJetsHT_Zinc2jet") denoVar = "addJetsHT_inc2jet";
+    else if (variable == "MeanNJetsdRapidity_Zinc2jet") denoVar = "dyj1j2_inc2jet";
+    else if (variable == "MeanNJetsdRapidityFB_Zinc2jet") denoVar = "dyjFjB_inc2jet";
+    
+    TH1D *genamcnlo = (TH1D*) famcnlo->Get(varRivetName.c_str());
+    TH1D *genamcnloDeno = (TH1D*) famcnlo->Get(denoVar.c_str());
+    genamcnlo->Divide(genamcnloDeno);
+    //--- End Get amcnlo -----
+    
     
     // print out integral value for testing
     const int nBins(dataCentral->GetNbinsX());
@@ -540,8 +586,8 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     genMad->Draw("E same");
     
     genBhatALL->SetFillStyle(ZJetsFillStyle);
-    genBhatALL->SetFillColor(kOrange-2);
-    //genBhatALL->SetFillColorAlpha(kOrange-2, 0.60);
+    //genBhatALL->SetFillColor(kOrange-2);
+    genBhatALL->SetFillColorAlpha(kOrange-2, 0.70);
     genBhatALL->SetLineColor(kOrange+10);
     genBhatALL->SetLineWidth(2);
     genBhatALL->SetMarkerColor(kOrange+10);
@@ -559,6 +605,16 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     //genShe->Draw("E2 same");
     genShe->Draw("E same");
     
+    genamcnlo->SetFillStyle(ZJetsFillStyle);
+    //genamcnlo->SetFillColor(kMagenta-10);
+    genamcnlo->SetFillColorAlpha(kMagenta-10, 0.80);
+    genamcnlo->SetLineColor(kMagenta);
+    genamcnlo->SetLineWidth(2);
+    genamcnlo->SetMarkerColor(kMagenta);
+    genamcnlo->SetMarkerStyle(27);
+    //genShe->Draw("E2 same");
+    //genamcnlo->Draw("E same");
+    
     pad1->Draw();
     //--- TLegend ---
     TLegend *legend = new TLegend(0.47, 0.74, 0.99, 0.98);
@@ -574,6 +630,7 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
     legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
     legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
+    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO 3,4j LO + PS)", "plef");
     legend->Draw();
     //------------------
     
@@ -665,6 +722,18 @@ void FuncPlot(string variable, bool logZ, bool decrease)
         //cout << " sherpa " << gen3->GetBinContent(i) << endl;
     }
     
+    TH1D  *gen4 = (TH1D*) hisUnfolded->Clone();
+    for(int i = 1; i <= hisUnfolded->GetNbinsX(); i++) {
+        if (hisUnfolded->GetBinContent(i) > 0.) {
+            gen4->SetBinContent(i, genamcnlo->GetBinContent(i)/hisUnfolded->GetBinContent(i));
+            gen4->SetBinError(i, genamcnlo->GetBinError(i)/hisUnfolded->GetBinContent(i));
+        }
+        else {
+            gen4->SetBinContent(i, 0.);
+            gen4->SetBinError(i, 0.);
+        }
+    }
+    
     //--- Set up for systematic plot on pad 1
     double xCoorCenRatio[nBins], yCoorCenRatio[nBins], xErrCenRatio[nBins], ySystDownCenRatio[nBins], ySystUpCenRatio[nBins];
     for (int bin(1); bin <= nBins; bin++) {
@@ -716,18 +785,15 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data1->SetMarkerStyle();
     data1->Draw("E1");
     
-    gen1->SetFillStyle(ZJetsFillStyle);
-    gen1->SetFillColor(kBlue-10);
-    gen1->SetLineColor(kBlue);
-    gen1->SetLineWidth(2);
-    gen1->SetMarkerColor(kBlue);
-    gen1->SetMarkerStyle(24);
-    gen1->Draw("E2 same");
-    gen1->Draw("E1 same");
-    
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
+    gen4->SetFillStyle(ZJetsFillStyle);
+    gen4->SetFillColorAlpha(kMagenta-10, 0.80);
+    //gen4->SetFillColor(kMagenta-10);
+    gen4->SetLineColor(kMagenta);
+    gen4->SetLineWidth(2);
+    gen4->SetMarkerColor(kMagenta);
+    gen4->SetMarkerStyle(27);
+    //gen4->Draw("E2 same");
+    //gen4->Draw("E1 same");
     
     TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend2->SetFillColor(0);
@@ -741,6 +807,19 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     TLegendEntry *leEntry2;
     leEntry2 = legend2->AddEntry(gen1, "Stat. unc. (gen)", "f");
     legend2->Draw("same");
+    
+    gen1->SetFillStyle(ZJetsFillStyle);
+    gen1->SetFillColor(kBlue-10);
+    gen1->SetLineColor(kBlue);
+    gen1->SetLineWidth(2);
+    gen1->SetMarkerColor(kBlue);
+    gen1->SetMarkerStyle(24);
+    gen1->Draw("E2 same");
+    gen1->Draw("E1 same");
+    
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
     
     // Text Madgraph
     /*
@@ -784,19 +863,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data2->SetMarkerStyle();
     data2->Draw("E1");
     
-    gen2->SetFillStyle(ZJetsFillStyle);
-    gen2->SetFillColor(kOrange-2);
-    gen2->SetLineColor(kOrange+10);
-    gen2->SetLineWidth(2);
-    gen2->SetMarkerColor(kOrange+10);
-    gen2->SetMarkerStyle(25);
-    gen2->Draw("E2 same");
-    gen2->Draw("E1 same");
-    
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
     TLegend *legend3 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend3->SetFillColor(0);
     legend3->SetFillStyle(ZJetsFillStyle);
@@ -809,6 +875,21 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     TLegendEntry *leEntry3;
     leEntry3 = legend3->AddEntry(gen2, "Stat. unc. (gen)", "f");
     legend3->Draw("same");
+    
+    gen2->SetFillStyle(ZJetsFillStyle);
+    gen2->SetFillColorAlpha(kOrange-2, 0.60);
+    //gen2->SetFillColor(kOrange-2);
+    gen2->SetLineColor(kOrange+10);
+    gen2->SetLineWidth(2);
+    gen2->SetMarkerColor(kOrange+10);
+    gen2->SetMarkerStyle(25);
+    gen2->Draw("E2 same");
+    gen2->Draw("E1 same");
+    
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
+    
     
     // Text BlackHat
     /*
@@ -856,6 +937,19 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     data3->SetMarkerStyle();
     data3->Draw("E1");
     
+    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
+    legend4->SetFillColor(0);
+    legend4->SetFillStyle(ZJetsFillStyle);
+    legend4->SetBorderSize(0);
+    //legend4->SetTextSize(.12);
+    legend4->SetY1(0.32);
+    legend4->SetX1(0.15);
+    legend4->SetY2(0.42);
+    legend4->SetTextSize(0.065);
+    TLegendEntry *leEntry4;
+    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
+    legend4->Draw("same");
+    
     gen3->SetFillStyle(ZJetsFillStyle);
     gen3->SetFillColor(kGreen-8);
     gen3->SetLineColor(kGreen+3);
@@ -869,18 +963,6 @@ void FuncPlot(string variable, bool logZ, bool decrease)
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
-    legend4->SetFillColor(0);
-    legend4->SetFillStyle(ZJetsFillStyle);
-    legend4->SetBorderSize(0);
-    //legend4->SetTextSize(.12);
-    legend4->SetY1(0.32);
-    legend4->SetX1(0.15);
-    legend4->SetY2(0.42);
-    legend4->SetTextSize(0.065);
-    TLegendEntry *leEntry4;
-    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
-    legend4->Draw("same");
     
     // Text Sherpa (position not relative to pad4)
     /*
@@ -1385,6 +1467,13 @@ TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC, string variable )
     
     return hUnfoldedCMeanJ;
     
+}
+
+TH2D* get2DHisto(TFile *File, string variable)
+{
+    TH2D *histo2D = (TH2D*) File->Get(variable.c_str());
+    histo2D->SetDirectory(0);
+    return histo2D;
 }
 
 /*

@@ -17,7 +17,8 @@ struct variableStruct{
 const int NVAROFINTERESTWJETS(52);
 variableStruct VAROFINTERESTWJETS[] = {
     //--  Name  ----------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE
-    {"ZNGoodJets_Zexc",             1,      1,           9,              5,             4,            3,           7}, //0
+    //{"ZNGoodJets_Zexc",             1,      1,           9,              5,             4,            3,           7}, //0
+    {"ZNGoodJetsFull_Zexc",             1,      1,           9,              4,             4,            3,           7}, //0
     
     //-- jet Pt distribution
     {"FirstJetPt_Zinc1jet",         1,      1,           8,              4,            14,           10,           7}, //1
@@ -47,11 +48,11 @@ variableStruct VAROFINTERESTWJETS[] = {
     {"JetsHT_1_Zinc5jet",           1,      1,           3,              4,             4,            2,           7}, //20
     
     //-- jet Eta distribution
-    {"FirstJetEta_Zinc1jet",        1,      1,          28,              4,            15,            3,           7},
-    {"SecondJetEta_Zinc2jet",       1,      1,          13,              4,            11,            4,           7},
-    {"ThirdJetEta_Zinc3jet",        1,      1,           4,              4,             8,            4,           7},
-    {"FourthJetEta_Zinc4jet",       1,      1,           5,              4,             3,            4,           7},
-    {"FifthJetEta_Zinc5jet",        1,      1,           4,              4,             2,            2,           7}, //25
+    {"FirstJetEta_Zinc1jet",        0,      1,          28,              4,            15,            3,           7},
+    {"SecondJetEta_Zinc2jet",       0,      1,          13,              4,            11,            4,           7},
+    {"ThirdJetEta_Zinc3jet",        0,      1,           4,              4,             8,            4,           7},
+    {"FourthJetEta_Zinc4jet",       0,      1,           5,              4,             3,            4,           7},
+    {"FifthJetEta_Zinc5jet",        0,      1,           4,              4,             2,            2,           7}, //25
     
     
     //--  Name  ------------------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE

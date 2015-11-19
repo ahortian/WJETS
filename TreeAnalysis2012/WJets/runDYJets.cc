@@ -238,11 +238,11 @@
     if ( doWhat == 51){
         
         // this is setup for sherpa NLO
-        ZJetsAndDPS DESherpaTest2NLO("SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5",  muLumi         * 1000.          , 1.,    0,   0,     0,    0,     1.,  jetPtMin,  jetPtMax, ZPtMin , ZEtaMin,    ZEtaMax );
+        ZJetsAndDPS DESherpaTest2NLO("SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_List",  muLumi         * 1000.          , 1.,    0,   0,     0,    0,     1.,  jetPtMin,  jetPtMax, ZPtMin , ZEtaMin,    ZEtaMax );
         DESherpaTest2NLO.Loop(0, 1, 0, 0, 0);
         
-        ZJetsAndDPS DESherpaTest2NLO("SE_8TeV_HEJ_v1",  muLumi         * 1000.          , 1.,    0,   0,     0,    0,     1.,  jetPtMin,  jetPtMax, ZPtMin , ZEtaMin,    ZEtaMax );
-        DESherpaTest2NLO.Loop(0, 1, 0, 0, 0);
+        //ZJetsAndDPS DESherpaTest2NLO("SE_8TeV_HEJ_v1",  muLumi         * 1000.          , 1.,    0,   0,     0,    0,     1.,  jetPtMin,  jetPtMax, ZPtMin , ZEtaMin,    ZEtaMax );
+        //DESherpaTest2NLO.Loop(0, 1, 0, 0, 0);
         
         // this is setup for sherpa NLO
         //ZJetsAndDPS DESherpaTest2NLO("DE_8TeV_DY_Sherpa_2NLO4_HepMC_dR_Full_List",  eleLumi         * 1000.          , 1.,    0,   0,     0,    0,     1.,  jetPtMin,  jetPtMax, ZPtMin , ZEtaMin,    ZEtaMax );

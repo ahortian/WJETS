@@ -212,6 +212,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     int NZtotal = 0 ;
 
     double sumSherpaW = 0. ;
+    double sumSherpaW0 = 0. ;
     cout << " Sherpa initial weight :  " << sumSherpaW <<endl;
 
     double sumTrig[4] = {0};
@@ -240,7 +241,8 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     Init(hasRecoInfo, hasGenInfo, hasPartonInfo);
     if (fChain == 0) return;
     Long64_t nbytes(0), nb(0);
-    Long64_t nentries = fChain->GetEntriesFast();
+    Long64_t nentries = fChain->GetEntries();
+    //Long64_t nentries = fChain->GetEntriesFast();
     if (nEvents_10000) {
         nentries = 10000;
         std::cout << "We plane to run on 100000 events" << std::endl;
@@ -268,12 +270,13 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     cout << " run on " << nentries << "events" << endl;
     //--- Begin Loop All Entries --
     for (Long64_t jentry(0); jentry < nentries; jentry++){
-    //for (Long64_t jentry(0); jentry < 100; jentry++){
+    //for (Long64_t jentry(0); jentry < 10000; jentry++){
         Long64_t ientry = LoadTree(jentry);
         if (ientry < 0) break;
-
         if (jentry % 100000 == 0) std::cout << jentry << std::endl;
-        nb = fChain->GetEntry(jentry);  
+        
+        //fChain->GetEntry(jentry);
+        nb = fChain->GetEntry(jentry);
         nbytes += nb;
         nEvents++;
 
@@ -335,6 +338,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             
             if (fileName.find("Sherpa2") != string::npos){
                 sumSherpaW += mcSherpaWeights_->at(4);
+                sumSherpaW0 += mcSherpaWeights_->at(0);
             }
             
         }
@@ -1462,7 +1466,9 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 GENnEventsIncl0Jets++;
                
                 genZNGoodJets_Zexc->Fill(nGoodGenJets, genWeight);
-                genZNGoodJetsFull_Zexc->Fill(nGoodGenJets, genWeight);
+                if(nGoodGenJets < 7){
+                    genZNGoodJetsFull_Zexc->Fill(nGoodGenJets, genWeight);
+                }
                 genZNGoodJets_Zinc->Fill(0., genWeight);
                 genZNGoodJetsFull_Zinc->Fill(0., genWeight);
                 
@@ -1967,6 +1973,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
                 if (nGoodGenJets >= 7){
                     genZNGoodJets_Zinc->Fill(7., genWeight);
                     genZNGoodJetsFull_Zinc->Fill(7., genWeight);
+                    genZNGoodJetsFull_Zexc->Fill(7., genWeight);
                 }
                 
                 if (nGoodGenJets >= 8) genZNGoodJets_Zinc->Fill(8., genWeight);
@@ -2026,7 +2033,10 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             ZNGoodJets_Zinc->Fill(0., weight);
             ZNGoodJetsFull_Zinc->Fill(0., weight);
             ZNGoodJets_Zexc->Fill(nGoodJets, weight);
-            ZNGoodJetsFull_Zexc->Fill(nGoodJets, weight);
+            if (nGoodJets < 7){
+                ZNGoodJetsFull_Zexc->Fill(nGoodJets, weight);
+            }
+            
             MET_Zinc0jet->Fill(METpt, weight);
             MT_Zinc0jet->Fill(MT, weight);
             MuPFIso_Zinc0jet->Fill(lepton1.iso, weight);
@@ -2875,6 +2885,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
             if (nGoodJets >= 7){
                 ZNGoodJets_Zinc->Fill(7., weight);
                 ZNGoodJetsFull_Zinc->Fill(7., weight);
+                ZNGoodJetsFull_Zexc->Fill(7., weight);
             }
             
             //more bins in Single Lepton dataset than Double --> xsec bigger
@@ -2890,7 +2901,20 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
         if (hasRecoInfo && hasGenInfo && passesGenLeptonCut && passesLeptonCut){
             //-- jet multiplicity exc
             hresponseZNGoodJets_Zexc->Fill(nGoodJets, nGoodGenJets, weight);
-            hresponseZNGoodJetsFull_Zexc->Fill(nGoodJets, nGoodGenJets, weight);
+            
+            if (nGoodGenJets <= 7 && nGoodJets <= 7){
+                hresponseZNGoodJetsFull_Zexc->Fill(nGoodJets, nGoodGenJets, weight);
+            }
+            else if (nGoodGenJets <= 7 && nGoodJets > 7){
+                hresponseZNGoodJetsFull_Zexc->Fill(7., nGoodGenJets, weight);
+            }
+            else if (nGoodGenJets > 7 && nGoodJets <= 7){
+                hresponseZNGoodJetsFull_Zexc->Fill(nGoodJets, 7., weight);
+            }
+            else if (nGoodGenJets > 7 && nGoodJets > 7){
+                hresponseZNGoodJetsFull_Zexc->Fill(7., 7., weight);
+            }
+            
             hresponseZNGoodJets_Zinc->Fill(0., 0., weight);
             hresponseZNGoodJetsFull_Zinc->Fill(0., 0., weight);
             //-- First Jet Pt
@@ -3205,6 +3229,7 @@ void ZJetsAndDPS::Loop(bool hasRecoInfo, bool hasGenInfo, int doQCD, bool doSSig
     cout << "Number GEN Inclusif 2 jets                     : " << GENnEventsIncl2Jets << endl;
     cout << "Number GEN Inclusif 3 jets                     : " << GENnEventsIncl3Jets << endl;
     cout << "Sherpa weight                                  : " << sumSherpaW << endl;
+    cout << "Sherpa weight fill                             : " << sumSherpaW0 << endl;
     if (doTTreweighting)       cout << "We run to TTbar with reweighting :   " << weightSum << "  and the original weight is :" << weightSumNoTopRew << endl;
     cout << " Trigger summary"<< endl;
     for (unsigned short k(0); k < 4; k++) {
@@ -3249,6 +3274,7 @@ ZJetsAndDPS::ZJetsAndDPS(string fileName_, float lumiScale_, float puScale_, boo
     if ( fileName.find("SMu_") == 0 || fileName.find("SE_") == 0 ) fullFileName =  "../DataW/" + fileName;
     if (fileName.find("Sherpa2") != string::npos) fullFileName =  "../DataSherpa2/" + fileName;
     if (fileName.find("HEJ") != string::npos) fullFileName =  "../DataHEJ/" + fileName;
+    
     if (fileName.find("List") == string::npos){
         if (fileName.find("Sherpa2") != string::npos){
             fullFileName += ".root";
@@ -3276,7 +3302,8 @@ ZJetsAndDPS::ZJetsAndDPS(string fileName_, float lumiScale_, float puScale_, boo
         int countFiles(0);
         while (getline(infile, line)){
             countFiles++;
-            string treePath =  line + "/tree/tree";
+            //string treePath =  line + "/tree/tree";
+            string treePath =  "../DataSherpa2/" + line + "/tree"; // currently, only sherpa2 has List of files
             chain->Add(treePath.c_str());       
         }
     }

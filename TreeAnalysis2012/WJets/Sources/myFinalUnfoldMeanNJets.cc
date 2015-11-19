@@ -223,8 +223,8 @@ void FuncUnfold(string leptonFlavor, bool isMuon, string unfAlg, string variable
     
     //------ Get Sherpa ------
     //-- for getting sherpa2
-    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
-    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
+    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
+    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
     TH2D *genShe = NULL;
     genShe = get2DHisto(fShe, genName);
     //--- End Get Sherpa -----

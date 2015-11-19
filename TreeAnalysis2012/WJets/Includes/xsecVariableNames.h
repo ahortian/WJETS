@@ -14,7 +14,8 @@ struct xsecVariableStruct{
 const xsecVariableStruct xsecVarNames[] = {
     // ZJetsAndDPSName             RivetName                  BlackHatName
 
-    {"ZNGoodJets_Zexc",             "njetWJet_excl",            "njet_WMuNu"}, //0
+    //{"ZNGoodJets_Zexc",             "njetWJet_excl",            "njet_WMuNu"}, //0
+    {"ZNGoodJetsFull_Zexc",             "njet_exc_fbin",            "njet_WMuNu"}, //0
     
     {"FirstJetPt_Zinc1jet",         "addjet_Pt1jetcase",        "ptjet1"},     //1
     {"SecondJetPt_Zinc2jet",        "addjet_Pt2jetcase",        "ptjet2"},
@@ -78,17 +79,17 @@ const xsecVariableStruct xsecVarNames[] = {
     {"diJetPt_Zinc3jet",                        "diJetPt_inc3jet",          "diJetPtjet3"},
     {"diJetPt_Zinc4jet",                        "diJetPt_inc4jet",          "diJetPtjet4"}, //42
     
-    {"dPhiLepJet1_Zinc1jet",                    "NA",              "dphijet1muon"},
-    {"dPhiLepJet2_Zinc2jet",                    "NA",              "dphijet2muon"},
-    {"dPhiLepJet3_Zinc3jet",                    "NA",              "dphijet3muon"},
-    {"dPhiLepJet4_Zinc4jet",                    "NA",              "dphijet4muon"},
-    {"dPhiLepJet5_Zinc5jet",                    "NA",              "NA"}, //47
+    {"dPhiLepJet1_Zinc1jet",                    "dphij1mu_inc1jet",         "dphijet1muon"},
+    {"dPhiLepJet2_Zinc2jet",                    "dphij2mu_inc2jet",         "dphijet2muon"},
+    {"dPhiLepJet3_Zinc3jet",                    "dphij3mu_inc3jet",         "dphijet3muon"},
+    {"dPhiLepJet4_Zinc4jet",                    "dphij4mu_inc4jet",         "dphijet4muon"},
+    {"dPhiLepJet5_Zinc5jet",                    "dphij5mu_inc5jet",         "NA"}, //47
     
     //-- Mean number of Jets
-    {"MeanNJetsHT_Zinc1jet",                    "NA",                       "totNJhtjet1"},
-    {"MeanNJetsHT_Zinc2jet",                    "NA",                       "totNJhtjet2"},
-    {"MeanNJetsdRapidity_Zinc2jet",             "NA",                       "totNJdyj1j2"},
-    {"MeanNJetsdRapidityFB_Zinc2jet",           "NA",                       "totNJdyjFjB"}, //51
+    {"MeanNJetsHT_Zinc1jet",                    "MeanNJht_inc1jet",         "totNJhtjet1"},
+    {"MeanNJetsHT_Zinc2jet",                    "MeanNJht_inc2jet",         "totNJhtjet2"},
+    {"MeanNJetsdRapidity_Zinc2jet",             "MeanNJdyj1j2_inc2jet",     "totNJdyj1j2"},
+    {"MeanNJetsdRapidityFB_Zinc2jet",           "MeanNJdyjFjB_inc2jet",     "totNJdyjFjB"}, //51
     
     
     //{"ZNGoodJets_Zinc",                         "njetWJet_incl",            "njet_WMuNu"},

@@ -31,8 +31,8 @@ using namespace std;
 
 
 //--- Declaring functions -------------
-void PlottingEdit(int start = 0, int end = -1, bool doNPTB = false);
-void FuncPlot(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1, string varRivetName = "njetWJet_excl", string varBlackHatName = "njet_WMuNu", bool doNPTB = false);
+void PlottingEdit(int start = 0, int end = -1, bool doNPTB = false, bool doPDFs = true);
+void FuncPlot(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1, string varRivetName = "njetWJet_excl", string varBlackHatName = "njet_WMuNu", bool doNPTB = false,  bool doPDFs = true);
 
 void FuncPlot2(string variable = "ZNGoodJets_Zexc", bool log = 1, bool decrease = 1, string varRivetName = "njetWJet_excl", string varBlackHatName = "njet_WMuNu");
 
@@ -41,7 +41,7 @@ void GetSysErrorTable (string variable, string outputTableName, TH1D* dataCenBac
 void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dataCentral = NULL, TH1D* hSyst[] = NULL);
 void plotSystematicBreakdownCombine (string outputDirectory, string variable, TH1D* dataCentral = NULL, TH1D* hSyst[] = NULL);
 
-void plotXsecIncJetMultipli(string variable, TH1D* dataCentral = NULL, TH1D* genMad = NULL, TH1D* genBhatALL = NULL, TH1D* genShe = NULL, int nBins = 11, double xCoor[] = NULL, double yCoor[] = NULL, double xErr[] = NULL, double ySystDown[] = NULL, double ySystUp[] = NULL);
+void plotXsecIncJetMultipli(string variable, TH1D* dataCentral = NULL, TH1D* genMad = NULL, TH1D* genBhatALL = NULL, TH1D* genShe = NULL, TH1D* genamcnlo = NULL, int nBins = 11, double xCoor[] = NULL, double yCoor[] = NULL, double xErr[] = NULL, double ySystDown[] = NULL, double ySystUp[] = NULL);
 
 //--------------------------------
 
@@ -56,7 +56,7 @@ bool doVarWidth = true ;
 const int ZJetsFillStyle = 1001;
 
 
-void PlottingEdit(int start, int end, bool doNPTB)
+void PlottingEdit(int start, int end, bool doNPTB, bool doPDFs)
 {
     //NVAROFINTEREST = 41;
     //for (int i(0); i < 1 /*NVAROFINTEREST*/; i++) {
@@ -67,16 +67,16 @@ void PlottingEdit(int start, int end, bool doNPTB)
             FuncPlot2(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease, xsecVarNames[i].RivetName, xsecVarNames[i].BlackHatName);
         }
         else{
-            FuncPlot(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease, xsecVarNames[i].RivetName, xsecVarNames[i].BlackHatName, doNPTB);
+            FuncPlot(VAROFINTERESTWJETS[i].name, VAROFINTERESTWJETS[i].log, VAROFINTERESTWJETS[i].decrease, xsecVarNames[i].RivetName, xsecVarNames[i].BlackHatName, doNPTB, doPDFs);
         }
         
     }
     
 }
 
-void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, string varBlackHatName, bool doNPTB)
+void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, string varBlackHatName, bool doNPTB, bool doPDFs)
 {
-    cout << "processing variable: " << variable <<  "  " << varBlackHatName << endl;
+    cout << "processing variable: " << variable <<  "  " << varBlackHatName << "  " << varRivetName << endl;
     string energy = getEnergy();
     if ( !isMuon ) leptonFlavor = "DE";
     gStyle->SetOptStat(0);
@@ -144,7 +144,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
 
     TH1D *genBhat[4];
     TH1D *genBhatALL;
-    if (variable == "ZNGoodJets_Zexc") {
+    if (variable == "ZNGoodJets_Zexc" || variable == "ZNGoodJetsFull_Zexc") {
         genBhat[0] = (TH1D*) fBhat[0]->Get("njet_WMuNu");
         genBhat[1] = (TH1D*) fBhat[1]->Get("njet_WMuNu");
         genBhat[2] = (TH1D*) fBhat[2]->Get("njet_WMuNu");
@@ -214,15 +214,83 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     }
     //--- End Get BlackHat ------
     
+    //--- Get PDFs variation for BH ------
+    if (doPDFs){
+        TH1D *BHpdfsUpALL;
+        TH1D *BHpdfsDnALL;
+        TH1D *BHscaleUpALL;
+        TH1D *BHscaleDnALL;
+        TH1D *BHscaleCenALL;
+        
+        if (varBlackHatName == "NA"){}
+        else{
+            //cout << "line th " << __LINE__ << endl;
+            TFile *fPDFs  = new TFile(("PNGFiles/BlackHatPDFs/PDFUncer_" + variable + "_histograms.root").c_str());
+            TFile *fscale = new TFile(("PNGFiles/BlackHatPDFs/PDFUncer_scale_vary_" + variable + "_histograms.root").c_str());
+            
+            //cout << "line th " << __LINE__ << endl;
+            BHpdfsUpALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_up");
+            //cout << "line th " << __LINE__ << endl;
+            BHpdfsDnALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_down");
+            //cout << "line th " << __LINE__ << endl;
+            BHscaleUpALL = (TH1D*) fscale->Get("CT10_scale_vary_up");
+            BHscaleDnALL = (TH1D*) fscale->Get("CT10_scale_vary_down");
+            BHscaleCenALL = (TH1D*) fscale->Get("CT10_scale_vary_cen");
+            
+            cout << BHscaleDnALL << " " << BHscaleDnALL->GetNbinsX() << endl;
+            
+            BHpdfsUpALL->Scale(0.001);
+            BHpdfsDnALL->Scale(0.001);
+            BHscaleUpALL->Scale(0.001);
+            BHscaleDnALL->Scale(0.001);
+            BHscaleCenALL->Scale(0.001);
+            
+            if (BHscaleDnALL->GetNbinsX() == genBhatALL->GetNbinsX()){
+                BHpdfsUpALL->Add(genBhatALL, -1);
+                BHpdfsDnALL->Add(genBhatALL, -1);
+                BHscaleUpALL->Add(genBhatALL, -1);
+                BHscaleDnALL->Add(genBhatALL, -1);
+            }
+            else{
+                BHpdfsUpALL->Add(BHscaleCenALL, -1);
+                BHpdfsDnALL->Add(BHscaleCenALL, -1);
+                BHscaleUpALL->Add(BHscaleCenALL, -1);
+                BHscaleDnALL->Add(BHscaleCenALL, -1);
+            }
+            
+            
+            
+            for(int i = 1; i<= dataCentral->GetNbinsX(); i++){
+                double errpdfs(0);
+                double errscale(0);
+                
+                if (fabs(BHpdfsUpALL->GetBinContent(i)) >= fabs(BHpdfsDnALL->GetBinContent(i))) errpdfs = fabs(BHpdfsUpALL->GetBinContent(i));
+                else errpdfs = fabs(BHpdfsDnALL->GetBinContent(i));
+                
+                if (fabs(BHscaleUpALL->GetBinContent(i)) >= fabs(BHscaleDnALL->GetBinContent(i)) ) errscale = fabs(BHscaleUpALL->GetBinContent(i));
+                else errscale = fabs(BHscaleDnALL->GetBinContent(i));
+                
+                cout << "errscale " << errscale << " errpdfs " << errpdfs << " genBhatALL->GetBinError(i) " << genBhatALL->GetBinError(i) << endl;
+                    
+                genBhatALL->SetBinError  (i, sqrt (pow(genBhatALL->GetBinError(i), 2) + pow(errpdfs, 2) + pow (errscale, 2) ));
+            }
+        }
+        
+    }
+    //------------------------
+    
     //--- Get Hadronization correction for BH ------
     if (doNPTB){
         TFile *fHCorr = new TFile("PNGFiles/BlackHat/BHatHadronizeCorr.root");
         cout << " Opening: " << "BHatHadronizeCorr.root" << "   --->   Opened ? " << fHCorr->IsOpen() << endl;
         string hname = "hadSF_" + variable;
+        //FIX THIS WHEN YOU ARE READY !!!
+        if(variable == "ZNGoodJets_Zexc" || variable == "ZNGoodJetsFull_Zexc") hname ="hadSF_ZNGoodJets_Zexc";
+        
         TH1D *hisHCorr = (TH1D*) fHCorr->Get(hname.c_str());
         cout << "got fHCorr: " << hisHCorr->Integral() << endl;
         
-        if (variable == "ZNGoodJets_Zexc") {
+        if (variable == "ZNGoodJets_Zexc" || variable == "ZNGoodJetsFull_Zexc") {
             for(int i = 2; i<= 5; i++){
                 genBhatALL->SetBinContent(i, genBhatALL->GetBinContent(i) * hisHCorr->GetBinContent(i));
                 genBhatALL->SetBinError  (i, genBhatALL->GetBinError(i) * hisHCorr->GetBinContent(i));
@@ -236,8 +304,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     //------ Get Sherpa ------
     //-- for getting Sherpa2
         // sherpa2 results in # of events >> need to do normalization
-    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
-    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
+    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
+    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
     string genName = "gen" + variable;
     TH1D *genShe = (TH1D*) fShe->Get(genName.c_str());
     //--- End Get Sherpa2 ------
@@ -259,6 +327,12 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     TH1D *genShe = (TH1D*) histoShe->Clone();
     */
     //-------------------------
+    
+    
+    //------ Get amcnlo ------
+    TFile *famcnlo = new TFile("PNGFiles/amcnlo/wjets_mcnlo.root");
+    cout << " Opening: " << "wjets_mcnlo.root" << "   --->   Opened ? " << famcnlo->IsOpen() << endl;
+    TH1D *genamcnlo = (TH1D*) famcnlo->Get(varRivetName.c_str());
     
     
     // print out integral value for testing
@@ -406,7 +480,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     //--- plot the inclusive jet multiplicity
     if (variable.find("ZNGoodJets") != string::npos){
         cout << " producing inclusive jet multiplicity plot" << endl;
-        plotXsecIncJetMultipli(variable, dataCentral, genMad, genBhatALL, genShe, nBins, xCoor, yCoor, xErr, ySystDown, ySystUp);
+        plotXsecIncJetMultipli(variable, dataCentral, genMad, genBhatALL, genShe, genamcnlo, nBins, xCoor, yCoor, xErr, ySystDown, ySystUp);
     }
     //---
     //===========================================================
@@ -495,8 +569,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     genMad->Draw("E same");
     
     genBhatALL->SetFillStyle(ZJetsFillStyle);
-    genBhatALL->SetFillColor(kOrange-2);
-    //genBhatALL->SetFillColorAlpha(kOrange-2, 0.60);
+    //genBhatALL->SetFillColor(kOrange-2);
+    genBhatALL->SetFillColorAlpha(kOrange-2, 0.70);
     genBhatALL->SetLineColor(kOrange+10);
     genBhatALL->SetLineWidth(2);
     genBhatALL->SetMarkerColor(kOrange+10);
@@ -514,6 +588,16 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     //genShe->Draw("E2 same");
     genShe->Draw("E same");
     
+    genamcnlo->SetFillStyle(ZJetsFillStyle);
+    //genamcnlo->SetFillColor(kMagenta-10);
+    genamcnlo->SetFillColorAlpha(kMagenta-10, 0.80);
+    genamcnlo->SetLineColor(kMagenta);
+    genamcnlo->SetLineWidth(2);
+    genamcnlo->SetMarkerColor(kMagenta);
+    genamcnlo->SetMarkerStyle(27);
+    //genShe->Draw("E2 same");
+    genamcnlo->Draw("E same");
+    
     pad1->Draw();
     //--- TLegend ---
     TLegend *legend = new TLegend(0.47, 0.74, 0.99, 0.98);
@@ -529,6 +613,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
     legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
     legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
+    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO 3,4j LO + PS)", "plef");
     legend->Draw();
     //------------------
     
@@ -620,7 +705,19 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         //cout << " sherpa " << gen3->GetBinContent(i) << endl;
     }
     
-    //--- Set up for systematic plot on pad 1
+    TH1D  *gen4 = (TH1D*) hisUnfolded->Clone();
+    for(int i = 1; i <= hisUnfolded->GetNbinsX(); i++) {
+        if (hisUnfolded->GetBinContent(i) > 0.) {
+            gen4->SetBinContent(i, genamcnlo->GetBinContent(i)/hisUnfolded->GetBinContent(i));
+            gen4->SetBinError(i, genamcnlo->GetBinError(i)/hisUnfolded->GetBinContent(i));
+        }
+        else {
+            gen4->SetBinContent(i, 0.);
+            gen4->SetBinError(i, 0.);
+        }
+    }
+    
+    //--- Set up for systematic plot on pad 2
     double xCoorCenRatio[nBins], yCoorCenRatio[nBins], xErrCenRatio[nBins], ySystDownCenRatio[nBins], ySystUpCenRatio[nBins];
     for (int bin(1); bin <= nBins; bin++) {
         // set x-coordinate and error in x
@@ -640,6 +737,15 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         
     }
     TGraphAsymmErrors *grCentralSystRatio = new TGraphAsymmErrors(nBins, xCoorCenRatio, yCoorCenRatio, xErrCenRatio, xErrCenRatio, ySystDownCenRatio, ySystUpCenRatio);
+    
+    bool legUp(false);
+    if ( variable.find("JetsHT_Zinc") != string::npos
+        || variable.find("dPhiLepJet") != string::npos
+        || variable.find("diJetMass") != string::npos
+        || variable.find("diJetPt") != string::npos){
+        legUp = true;
+    }
+    
     
 
     //--- NEW TPAD => pad2 ---//
@@ -671,6 +777,37 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     data1->SetMarkerStyle();
     data1->Draw("E1");
     
+    gen4->SetFillStyle(ZJetsFillStyle);
+    gen4->SetFillColorAlpha(kMagenta-10, 0.80);
+    //gen4->SetFillColor(kMagenta-10);
+    gen4->SetLineColor(kMagenta);
+    gen4->SetLineWidth(2);
+    gen4->SetMarkerColor(kMagenta);
+    gen4->SetMarkerStyle(27);
+    gen4->Draw("E2 same");
+    gen4->Draw("E1 same");
+    
+    TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
+    legend2->SetFillColor(0);
+    legend2->SetFillStyle(ZJetsFillStyle);
+    legend2->SetBorderSize(0);
+    //legend2->SetTextSize(.12);
+    if(legUp){
+        legend2->SetY1(0.80);
+        legend2->SetX1(0.15);
+        legend2->SetY2(0.93);
+    }
+    else{
+        legend2->SetY1(0.07);
+        legend2->SetX1(0.15);
+        legend2->SetY2(0.20);
+    }
+    legend2->SetTextSize(0.09);
+    TLegendEntry *leEntry2;
+    leEntry2 = legend2->AddEntry(gen1, "Stat. unc. (gen)", "f");
+    legend2->Draw("same");
+
+    
     gen1->SetFillStyle(ZJetsFillStyle);
     gen1->SetFillColor(kBlue-10);
     gen1->SetLineColor(kBlue);
@@ -684,18 +821,6 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
-    legend2->SetFillColor(0);
-    legend2->SetFillStyle(ZJetsFillStyle);
-    legend2->SetBorderSize(0);
-    //legend2->SetTextSize(.12);
-    legend2->SetY1(0.07);
-    legend2->SetX1(0.15);
-    legend2->SetY2(0.20);
-    legend2->SetTextSize(0.09);
-    TLegendEntry *leEntry2;
-    leEntry2 = legend2->AddEntry(gen1, "Stat. unc. (gen)", "f");
-    legend2->Draw("same");
     
     // Text Madgraph
     /*
@@ -744,16 +869,24 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     legend3->SetFillStyle(ZJetsFillStyle);
     legend3->SetBorderSize(0);
     //legend3->SetTextSize(.12);
-    legend3->SetY1(0.07);
-    legend3->SetX1(0.15);
-    legend3->SetY2(0.20);
+    if(legUp){
+        legend3->SetY1(0.80);
+        legend3->SetX1(0.15);
+        legend3->SetY2(0.93);
+    }
+    else{
+        legend3->SetY1(0.07);
+        legend3->SetX1(0.15);
+        legend3->SetY2(0.20);
+    }
     legend3->SetTextSize(0.09);
     TLegendEntry *leEntry3;
-    leEntry3 = legend3->AddEntry(gen2, "Stat. unc. (gen)", "f");
+    leEntry3 = legend3->AddEntry(gen2, "Sys. and Stat. unc. (gen)", "f");
     legend3->Draw("same");
     
     gen2->SetFillStyle(ZJetsFillStyle);
-    gen2->SetFillColor(kOrange-2);
+    gen2->SetFillColorAlpha(kOrange-2, 0.60);
+    //gen2->SetFillColor(kOrange-2);
     gen2->SetLineColor(kOrange+10);
     gen2->SetLineWidth(2);
     gen2->SetMarkerColor(kOrange+10);
@@ -764,6 +897,9 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     grCentralSystRatio->SetFillStyle(3354);
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
+    
+
+    
     
     
     
@@ -813,6 +949,27 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     data3->SetMarkerStyle();
     data3->Draw("E1");
     
+    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
+    legend4->SetFillColor(0);
+    legend4->SetFillStyle(ZJetsFillStyle);
+    legend4->SetBorderSize(0);
+    //legend4->SetTextSize(.12);
+    
+    if(legUp){
+        legend4->SetY1(0.85);
+        legend4->SetX1(0.15);
+        legend4->SetY2(0.95);
+    }
+    else{
+        legend4->SetY1(0.32);
+        legend4->SetX1(0.15);
+        legend4->SetY2(0.42);
+    }
+    legend4->SetTextSize(0.065);
+    TLegendEntry *leEntry4;
+    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
+    legend4->Draw("same");
+    
     gen3->SetFillStyle(ZJetsFillStyle);
     gen3->SetFillColor(kGreen-8);
     gen3->SetLineColor(kGreen+3);
@@ -826,18 +983,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
-    legend4->SetFillColor(0);
-    legend4->SetFillStyle(ZJetsFillStyle);
-    legend4->SetBorderSize(0);
-    //legend4->SetTextSize(.12);
-    legend4->SetY1(0.32);
-    legend4->SetX1(0.15);
-    legend4->SetY2(0.42);
-    legend4->SetTextSize(0.065);
-    TLegendEntry *leEntry4;
-    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
-    legend4->Draw("same");
+
     
     // Text Sherpa (position not relative to pad4)
     /*
@@ -1004,8 +1150,8 @@ void FuncPlot2(string variable, bool logZ, bool decrease, string varRivetName, s
     //------ Get Sherpa ------
     //-- for getting Sherpa2
     // sherpa2 results in # of events >> need to do normalization
-    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
-    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v5_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
+    TFile *fShe = new TFile("PNGFiles/Sherpa2/SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root");
+    cout << " Opening: " << "SMu_8TeV_WToLNu_Sherpa2jNLO4jLO_v6_EffiCorr_0_TrigCorr_0_Syst_0_JetPtMin_30_VarWidth.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
     string genName = "gen" + variable;
     TH1D *genShe = (TH1D*) fShe->Get(genName.c_str());
     //--- End Get Sherpa2 ------
@@ -2495,7 +2641,7 @@ void GetSysErrorTable (string variable, string outputTableName, TH1D* dataCenBac
 }
 
 
-void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadIni, TH1D* genBhatALLIni, TH1D* genSheIni, int nBins, double xCoor[], double yCoorIni[], double xErr[], double ySystDownIni[], double ySystUpIni[])
+void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadIni, TH1D* genBhatALLIni, TH1D* genSheIni, TH1D* genamcnloIni, int nBins, double xCoor[], double yCoorIni[], double xErr[], double ySystDownIni[], double ySystUpIni[])
 {
     
     cout << "...producing inclusive jet multiplicity plot...." << endl;
@@ -2509,6 +2655,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     TH1D *genMad      = (TH1D*) genMadIni     ->Clone();
     TH1D *genBhatALL  = (TH1D*) genBhatALLIni ->Clone();
     TH1D *genShe      = (TH1D*) genSheIni     ->Clone();
+    TH1D *genamcnlo   = (TH1D*) genamcnloIni  ->Clone();
     
     for(int i = 1; i <= nBins; i++) {
         dataCentral->SetBinContent(i, 0.0);
@@ -2522,6 +2669,9 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
         
         genShe->SetBinContent(i, 0.0);
         genShe->SetBinError  (i, 0.0);
+        
+        genamcnlo->SetBinContent(i, 0.0);
+        genamcnlo->SetBinError  (i, 0.0);
     }
     
     for(int i = 1; i <= nBins; i++){
@@ -2579,6 +2729,20 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
         
         genShe->SetBinContent(i, binContentInc);
         genShe->SetBinError(i, binErrorInc);
+    }
+    
+    
+    for(int i = 1; i <= nBins; i++){
+        double binContentInc(0);
+        double binErrorInc(0);
+        for (int j = 0; j < (nBins+1-i); j++){
+            binContentInc += genamcnloIni->GetBinContent(nBins-j);
+            binErrorInc   += pow(genamcnloIni->GetBinError(nBins-j), 2);
+        }
+        binErrorInc = sqrt(binErrorInc);
+        
+        genamcnlo->SetBinContent(i, binContentInc);
+        genamcnlo->SetBinError(i, binErrorInc);
     }
     
     double yCoor[11], ySystDown[11], ySystUp[11];
@@ -2683,8 +2847,8 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     genMad->Draw("E same");
     
     genBhatALL->SetFillStyle(ZJetsFillStyle);
-    genBhatALL->SetFillColor(kOrange-2);
-    //genBhatALL->SetFillColorAlpha(kOrange-2, 0.60);
+    //genBhatALL->SetFillColor(kOrange-2);
+    genBhatALL->SetFillColorAlpha(kOrange-2, 0.70);
     genBhatALL->SetLineColor(kOrange+10);
     genBhatALL->SetLineWidth(2);
     genBhatALL->SetMarkerColor(kOrange+10);
@@ -2702,6 +2866,15 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     //genShe->Draw("E2 same");
     genShe->Draw("E same");
     
+    genamcnlo->SetFillStyle(ZJetsFillStyle);
+    //genamcnlo->SetFillColor(kMagenta-10);
+    genamcnlo->SetFillColorAlpha(kMagenta-10, 0.80);
+    genamcnlo->SetLineColor(kMagenta);
+    genamcnlo->SetLineWidth(2);
+    genamcnlo->SetMarkerColor(kMagenta);
+    genamcnlo->SetMarkerStyle(27);
+    genamcnlo->Draw("E same");
+    
     pad1->Draw();
     //--- TLegend ---
     TLegend *legend = new TLegend(0.47, 0.74, 0.99, 0.98);
@@ -2717,6 +2890,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
     legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
     legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
+    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO 3,4j LO + PS)", "plef");
     legend->Draw();
     //------------------
     
@@ -2790,6 +2964,18 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
         //cout << " sherpa " << gen3->GetBinContent(i) << endl;
     }
     
+    TH1D  *gen4 = (TH1D*) hisUnfolded->Clone();
+    for(int i = 1; i <= hisUnfolded->GetNbinsX(); i++) {
+        if (hisUnfolded->GetBinContent(i) > 0.) {
+            gen4->SetBinContent(i, genamcnlo->GetBinContent(i)/hisUnfolded->GetBinContent(i));
+            gen4->SetBinError(i, genamcnlo->GetBinError(i)/hisUnfolded->GetBinContent(i));
+        }
+        else {
+            gen4->SetBinContent(i, 0.);
+            gen4->SetBinError(i, 0.);
+        }
+    }
+    
     //--- Set up for systematic plot on pad 2
     double xCoorCenRatio[nBins], yCoorCenRatio[nBins], xErrCenRatio[nBins], ySystDownCenRatio[nBins], ySystUpCenRatio[nBins];
     for (int bin(1); bin <= nBins; bin++) {
@@ -2841,19 +3027,16 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     data1->SetMarkerStyle();
     data1->Draw("E1");
     
-    gen1->SetFillStyle(ZJetsFillStyle);
-    gen1->SetFillColor(kBlue-10);
-    gen1->SetLineColor(kBlue);
-    gen1->SetLineWidth(2);
-    gen1->SetMarkerColor(kBlue);
-    gen1->SetMarkerStyle(24);
-    gen1->Draw("E2 same");
-    gen1->Draw("E1 same");
-    
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
+    gen4->SetFillStyle(ZJetsFillStyle);
+    gen4->SetFillColorAlpha(kMagenta-10, 0.80);
+    //gen4->SetFillColor(kMagenta-10);
+    gen4->SetLineColor(kMagenta);
+    gen4->SetLineWidth(2);
+    gen4->SetMarkerColor(kMagenta);
+    gen4->SetMarkerStyle(27);
+    gen4->Draw("E2 same");
+    gen4->Draw("E1 same");
+
     TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend2->SetFillColor(0);
     legend2->SetFillStyle(ZJetsFillStyle);
@@ -2866,6 +3049,19 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     TLegendEntry *leEntry2;
     leEntry2 = legend2->AddEntry(gen1, "Stat. unc. (gen)", "f");
     legend2->Draw("same");
+    
+    gen1->SetFillStyle(ZJetsFillStyle);
+    gen1->SetFillColor(kBlue-10);
+    gen1->SetLineColor(kBlue);
+    gen1->SetLineWidth(2);
+    gen1->SetMarkerColor(kBlue);
+    gen1->SetMarkerStyle(24);
+    gen1->Draw("E2 same");
+    gen1->Draw("E1 same");
+    
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
     
     // Text Madgraph
     /*
@@ -2909,19 +3105,6 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     data2->SetMarkerStyle();
     data2->Draw("E1");
     
-    gen2->SetFillStyle(ZJetsFillStyle);
-    gen2->SetFillColor(kOrange-2);
-    gen2->SetLineColor(kOrange+10);
-    gen2->SetLineWidth(2);
-    gen2->SetMarkerColor(kOrange+10);
-    gen2->SetMarkerStyle(25);
-    gen2->Draw("E2 same");
-    gen2->Draw("E1 same");
-    
-    grCentralSystRatio->SetFillStyle(3354);
-    grCentralSystRatio->SetFillColor(12);
-    grCentralSystRatio->Draw("2");
-    
     TLegend *legend3 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend3->SetFillColor(0);
     legend3->SetFillStyle(ZJetsFillStyle);
@@ -2934,6 +3117,22 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     TLegendEntry *leEntry3;
     leEntry3 = legend3->AddEntry(gen2, "Stat. unc. (gen)", "f");
     legend3->Draw("same");
+    
+    gen2->SetFillStyle(ZJetsFillStyle);
+    gen2->SetFillColorAlpha(kOrange-2, 0.60);
+    //gen2->SetFillColor(kOrange-2);
+    gen2->SetLineColor(kOrange+10);
+    gen2->SetLineWidth(2);
+    gen2->SetMarkerColor(kOrange+10);
+    gen2->SetMarkerStyle(25);
+    gen2->Draw("E2 same");
+    gen2->Draw("E1 same");
+    
+    grCentralSystRatio->SetFillStyle(3354);
+    grCentralSystRatio->SetFillColor(12);
+    grCentralSystRatio->Draw("2");
+    
+
     
     // Text BlackHat
     /*
@@ -2968,9 +3167,9 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     data3->GetXaxis()->SetBinLabel(6, "#geq 5");
     data3->GetXaxis()->SetBinLabel(7, "#geq 6");
     data3->GetXaxis()->SetBinLabel(8, "#geq 7");
-    data3->GetXaxis()->SetBinLabel(9, "#geq 8");
-    data3->GetXaxis()->SetBinLabel(10,"#geq 9");
-    data3->GetXaxis()->SetBinLabel(11,"#geq 10");
+    //data3->GetXaxis()->SetBinLabel(9, "#geq 8");
+    //data3->GetXaxis()->SetBinLabel(10,"#geq 9");
+    //data3->GetXaxis()->SetBinLabel(11,"#geq 10");
     data3->GetXaxis()->SetRange(1, 8);
     
     
@@ -2996,6 +3195,19 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     data3->SetMarkerStyle();
     data3->Draw("E1");
     
+    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
+    legend4->SetFillColor(0);
+    legend4->SetFillStyle(ZJetsFillStyle);
+    legend4->SetBorderSize(0);
+    //legend4->SetTextSize(.12);
+    legend4->SetY1(0.32);
+    legend4->SetX1(0.15);
+    legend4->SetY2(0.42);
+    legend4->SetTextSize(0.065);
+    TLegendEntry *leEntry4;
+    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
+    legend4->Draw("same");
+
     gen3->SetFillStyle(ZJetsFillStyle);
     gen3->SetFillColor(kGreen-8);
     gen3->SetLineColor(kGreen+3);
@@ -3009,18 +3221,6 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     grCentralSystRatio->SetFillColor(12);
     grCentralSystRatio->Draw("2");
     
-    TLegend *legend4 = new TLegend(0.16, 0.05, 0.33, 0.20);
-    legend4->SetFillColor(0);
-    legend4->SetFillStyle(ZJetsFillStyle);
-    legend4->SetBorderSize(0);
-    //legend4->SetTextSize(.12);
-    legend4->SetY1(0.32);
-    legend4->SetX1(0.15);
-    legend4->SetY2(0.42);
-    legend4->SetTextSize(0.065);
-    TLegendEntry *leEntry4;
-    leEntry4 = legend4->AddEntry(gen3, "Stat. unc. (gen)", "f");
-    legend4->Draw("same");
     
     // Text Sherpa (position not relative to pad4)
     /*
