@@ -42,6 +42,8 @@ void plotSystematicBreakdown (string outputDirectory, string variable, TH1D* dat
 TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC= NULL, string variable = "ZNGoodJets_Zexc");
 
 TH2D* get2DHisto(TFile *File, string variable = "MeanNJetsHT_Zinc1jet");
+
+TH1D* getMeanNJaMCNLO(TFile *famcnlo, string variable = "MeanNJetsHT_Zinc1jet");
 //--------------------------------
 
 
@@ -284,8 +286,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     genBhatMeanJ->Divide(genBhatDenoSum);
     //---
     
-    cout << " average  " << genBhatMeanJ->GetBinContent(9) << "  "  << genBHMeanJ->GetBinContent(9) << endl;
-    cout << " average  " << genBhatMeanJ->GetBinContent(10) << "  "  << genBHMeanJ->GetBinContent(10) << endl;
+    cout << " BH average  " << genBhatMeanJ->GetBinContent(9) << "  "  << genBHMeanJ->GetBinContent(9) << endl;
+    cout << " BH average  " << genBhatMeanJ->GetBinContent(10) << "  "  << genBHMeanJ->GetBinContent(10) << endl;
     
     TH1D *genBhatALL = (TH1D*) genBHMeanJ->Clone();
     //--- End Get BlackHat ------
@@ -376,15 +378,21 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     TFile *famcnlo = new TFile("PNGFiles/amcnlo/wjets_mcnlo.root");
     cout << " Opening: " << "wjets_mcnlo.root" << "   --->   Opened ? " << fShe->IsOpen() << endl;
     
+    TH1D *genamcnlo = getMeanNJaMCNLO(famcnlo, variable);
+    
+    // Cross-check calculation
     string denoVar;
     if (variable == "MeanNJetsHT_Zinc1jet") denoVar = "addJetsHT_inc1jet";
     else if (variable == "MeanNJetsHT_Zinc2jet") denoVar = "addJetsHT_inc2jet";
     else if (variable == "MeanNJetsdRapidity_Zinc2jet") denoVar = "dyj1j2_inc2jet";
     else if (variable == "MeanNJetsdRapidityFB_Zinc2jet") denoVar = "dyjFjB_inc2jet";
     
-    TH1D *genamcnlo = (TH1D*) famcnlo->Get(varRivetName.c_str());
+    TH1D *genamcnloCheck = (TH1D*) famcnlo->Get(varRivetName.c_str());
     TH1D *genamcnloDeno = (TH1D*) famcnlo->Get(denoVar.c_str());
-    genamcnlo->Divide(genamcnloDeno);
+    genamcnloCheck->Divide(genamcnloDeno);
+    
+    cout << " amcnlo average  " << genamcnlo->GetBinContent(9) << "  "  << genamcnloCheck->GetBinContent(9) << endl;
+    cout << " amcnlo average  " << genamcnlo->GetBinContent(10) << "  "  << genamcnloCheck->GetBinContent(10) << endl;
     //--- End Get amcnlo -----
     
     
@@ -612,8 +620,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     genamcnlo->SetLineWidth(2);
     genamcnlo->SetMarkerColor(kMagenta);
     genamcnlo->SetMarkerStyle(27);
-    //genShe->Draw("E2 same");
-    //genamcnlo->Draw("E same");
+    //genamcnlo->Draw("E2 same");
+    genamcnlo->Draw("E same");
     
     pad1->Draw();
     //--- TLegend ---
@@ -792,8 +800,8 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     gen4->SetLineWidth(2);
     gen4->SetMarkerColor(kMagenta);
     gen4->SetMarkerStyle(27);
-    //gen4->Draw("E2 same");
-    //gen4->Draw("E1 same");
+    gen4->Draw("E2 same");
+    gen4->Draw("E1 same");
     
     TLegend *legend2 = new TLegend(0.16, 0.05, 0.33, 0.20);
     legend2->SetFillColor(0);
@@ -1475,6 +1483,155 @@ TH2D* get2DHisto(TFile *File, string variable)
     histo2D->SetDirectory(0);
     return histo2D;
 }
+
+TH1D* getMeanNJaMCNLO(TFile *famcnlo, string variable){
+    
+    //string amcloName_1, amcloName_2, amcloName_3, amcloName_4, amcloName_5, amcloName_6, amcloName_7, amcloName_8, amcloName_9, amcloName_10, amcloName_11, amcloName_12, amcloName_13, amcloName_14, amcloName_15;
+    string amcloName[15];
+    TH1D* amcnlohis[15];
+    TH1D* genMeanJ = NULL;
+    
+    if (variable == "MeanNJetsHT_Zinc1jet") {
+        amcloName[0] = "ht_Exc1jetbin1";
+        amcloName[1] = "ht_Exc2jetbin1";
+        amcloName[2] = "ht_Exc3jetbin1";
+        amcloName[3] = "ht_Exc4jetbin1";
+        amcloName[4] = "ht_Exc5jetbin1";
+        amcloName[5] = "ht_Exc6jetbin1";
+        amcloName[6] = "ht_Exc7jetbin1";
+        amcloName[7] = "ht_Exc8jetbin1";
+        amcloName[8] = "ht_Exc9jetbin1";
+        amcloName[9] = "ht_Exc10jetbin1";
+        amcloName[10] = "ht_Exc11jetbin1";
+        amcloName[11] = "ht_Exc12jetbin1";
+        amcloName[12] = "ht_Exc13jetbin1";
+        amcloName[13] = "ht_Exc14jetbin1";
+        amcloName[14] = "ht_Exc15jetbin1";
+    }
+    else if (variable == "MeanNJetsHT_Zinc2jet") {
+        amcloName[1] = "ht_Exc2jetbin2";
+        amcloName[2] = "ht_Exc3jetbin2";
+        amcloName[3] = "ht_Exc4jetbin2";
+        amcloName[4] = "ht_Exc5jetbin2";
+        amcloName[5] = "ht_Exc6jetbin2";
+        amcloName[6] = "ht_Exc7jetbin2";
+        amcloName[7] = "ht_Exc8jetbin2";
+        amcloName[8] = "ht_Exc9jetbin2";
+        amcloName[9] = "ht_Exc10jetbin2";
+        amcloName[10] = "ht_Exc11jetbin2";
+        amcloName[11] = "ht_Exc12jetbin2";
+        amcloName[12] = "ht_Exc13jetbin2";
+        amcloName[13] = "ht_Exc14jetbin2";
+        amcloName[14] = "ht_Exc15jetbin2";
+        
+    }
+    else if (variable == "MeanNJetsdRapidity_Zinc2jet") {
+        amcloName[1] = "dyj1j2_Exc2jet";
+        amcloName[2] = "dyj1j2_Exc3jet";
+        amcloName[3] = "dyj1j2_Exc4jet";
+        amcloName[4] = "dyj1j2_Exc5jet";
+        amcloName[5] = "dyj1j2_Exc6jet";
+        amcloName[6] = "dyj1j2_Exc7jet";
+        amcloName[7] = "dyj1j2_Exc8jet";
+        amcloName[8] = "dyj1j2_Exc9jet";
+        amcloName[9] = "dyj1j2_Exc10jet";
+        amcloName[10] = "dyj1j2_Exc11jet";
+        amcloName[11] = "dyj1j2_Exc12jet";
+        amcloName[12] = "dyj1j2_Exc13jet";
+        amcloName[13] = "dyj1j2_Exc14jet";
+        amcloName[14] = "dyj1j2_Exc15jet";
+    }
+    else if (variable == "MeanNJetsdRapidityFB_Zinc2jet") {
+        amcloName[1] = "dyjFjB_Exc2jet";
+        amcloName[2] = "dyjFjB_Exc3jet";
+        amcloName[3] = "dyjFjB_Exc4jet";
+        amcloName[4] = "dyjFjB_Exc5jet";
+        amcloName[5] = "dyjFjB_Exc6jet";
+        amcloName[6] = "dyjFjB_Exc7jet";
+        amcloName[7] = "dyjFjB_Exc8jet";
+        amcloName[8] = "dyjFjB_Exc9jet";
+        amcloName[9] = "dyjFjB_Exc10jet";
+        amcloName[10] = "dyjFjB_Exc11jet";
+        amcloName[11] = "dyjFjB_Exc12jet";
+        amcloName[12] = "dyjFjB_Exc13jet";
+        amcloName[13] = "dyjFjB_Exc14jet";
+        amcloName[14] = "dyjFjB_Exc15jet";
+    }
+    
+    if (variable == "MeanNJetsHT_Zinc1jet") {
+        for (int i = 0; i<15; i++){
+            amcnlohis[i] = (TH1D*) famcnlo->Get(amcloName[i].c_str());
+        }
+        
+        int nBinsX(amcnlohis[0]->GetNbinsX());
+        double xmin = amcnlohis[0]->GetXaxis()->GetXmin();
+        double xmax = amcnlohis[0]->GetXaxis()->GetXmax();
+        cout << " nBinsX: " << nBinsX << endl;
+        
+        const double *xBins = new double[nBinsX+1];
+        xBins = amcnlohis[0]->GetXaxis()->GetXbins()->GetArray();
+        
+        TH2D* gen2D;
+        
+        if (xBins == 0){
+            gen2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 15, 0.5, 15.5);
+        }
+        else{
+            gen2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 15, 0.5, 15.5);
+        }
+        
+        for (int j = 1; j<= 15; j++){
+            for (int i = 1; i<= nBinsX; i++){
+                gen2D->SetBinContent(i, j, amcnlohis[j-1]->GetBinContent(i));
+                gen2D->SetBinError(i, j, amcnlohis[j-1]->GetBinError(i));
+            }
+        }
+        
+        genMeanJ = computeProject1DMeanNJets(gen2D, variable);
+    }
+    else {
+        amcnlohis[0] = NULL;
+        for (int i = 0; i<15; i++){
+            if (i == 0) amcnlohis[i] = NULL;
+            else amcnlohis[i] = (TH1D*) famcnlo->Get(amcloName[i].c_str());
+        }
+        
+        amcnlohis[0] = (TH1D*) amcnlohis[1]->Clone();
+        for (int i = 1; i<= amcnlohis[1]->GetNbinsX(); i++){
+            amcnlohis[0]->SetBinContent(i,0);
+            amcnlohis[0]->SetBinError(i,0);
+        }
+        
+        int nBinsX(amcnlohis[1]->GetNbinsX());
+        double xmin = amcnlohis[1]->GetXaxis()->GetXmin();
+        double xmax = amcnlohis[1]->GetXaxis()->GetXmax();
+        cout << " nBinsX: " << nBinsX << endl;
+        
+        const double *xBins = new double[nBinsX+1];
+        xBins = amcnlohis[1]->GetXaxis()->GetXbins()->GetArray();
+        
+        TH2D* gen2D;
+        
+        if (xBins == 0){
+            gen2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax, 15, 0.5, 15.5);
+        }
+        else{
+            gen2D = new TH2D(variable.c_str(), variable.c_str(), nBinsX, xBins, 15, 0.5, 15.5);
+        }
+        
+        for (int j = 1; j<= 15; j++){
+            for (int i = 1; i<= nBinsX; i++){
+                gen2D->SetBinContent(i, j, amcnlohis[j-1]->GetBinContent(i));
+                gen2D->SetBinError(i, j, amcnlohis[j-1]->GetBinError(i));
+            }
+        }
+        
+        genMeanJ = computeProject1DMeanNJets(gen2D, variable);
+    }
+    
+    return genMeanJ;
+}
+
 
 /*
 void GetSysErrorTable (string variable, string outputTableName, TH1D* dataCenBackUp, TH1D* hDiffer[], TH1D* hStatError, TH1D* hTotalError, const int nGroup)
