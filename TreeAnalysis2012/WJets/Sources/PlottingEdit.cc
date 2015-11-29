@@ -613,7 +613,7 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
     legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
     legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
     legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
-    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO 3,4j LO + PS)", "plef");
+    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO + PS)", "plef");
     legend->Draw();
     //------------------
     
@@ -2890,7 +2890,7 @@ void plotXsecIncJetMultipli(string variable, TH1D* dataCentralIni, TH1D* genMadI
     legend->AddEntry(genMad, "MG5 + PY6 (#leq 4j LO + PS)", "plef");
     legend->AddEntry(genBhatALL, "BLACKHAT+SHERPA (NLO)", "plef");
     legend->AddEntry(genShe, "SHERPA 2 (#leq 2j NLO 3,4j LO + PS)", "plef");
-    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO 3,4j LO + PS)", "plef");
+    legend->AddEntry(genamcnlo, "MG5_aMC + PY8 (#leq 2j NLO + PS)", "plef");
     legend->Draw();
     //------------------
     
