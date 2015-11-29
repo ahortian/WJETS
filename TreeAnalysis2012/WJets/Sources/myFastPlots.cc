@@ -201,7 +201,7 @@ void FastPlotsRun(const int *sel, int nsel, string leptonFlavor, string variable
     TH2D *hNormResp = (TH2D*) hresponse->Clone();
     normalizeTH2D(hNormResp);
     
-    
+    if (!closureTest){
     //--- setup for Zjets method
     TH1D *recoMadZJ = (TH1D*) recoMad->Clone();
     recoMadZJ->Reset();
@@ -221,6 +221,7 @@ void FastPlotsRun(const int *sel, int nsel, string leptonFlavor, string variable
     
     TH1D *hUnfDataSVD= NULL;
     int nIterSVD = UnfoldData(leptonFlavor, "SVD", Bayeskterm, responseZJ, hRecDataMinusFakes, hUnfDataSVD, variable, "");
+    }
     
     //-- get Powheg histograms -------------------------------------------------------
     //TFile *Powheg = getFile(FILESDIRECTORY, leptonFlavor, energy, DYPOWHEGFILENAME, JetPtMin, JetPtMax, doFlat);
