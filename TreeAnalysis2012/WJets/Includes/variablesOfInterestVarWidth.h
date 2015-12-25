@@ -18,6 +18,7 @@ const int NVAROFINTERESTWJETS(52);
 variableStruct VAROFINTERESTWJETS[] = {
     //--  Name  ----------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE
     //{"ZNGoodJets_Zexc",             1,      1,           9,              5,             4,            3,           7}, //0
+    
     {"ZNGoodJetsFull_Zexc",             1,      1,           9,              4,             4,            3,           7}, //0
     
     //-- jet Pt distribution
@@ -92,9 +93,9 @@ variableStruct VAROFINTERESTWJETS[] = {
     
     // Mean number of Jets
     {"MeanNJetsHT_Zinc1jet",                0,      0,           3,              6,             9,            3,           7},
-    {"MeanNJetsHT_Zinc2jet",                0,      0,           3,              8,            10,            4,           7},
-    {"MeanNJetsdRapidity_Zinc2jet",         0,      0,           3,              3,             7,            5,           7},
-    {"MeanNJetsdRapidityFB_Zinc2jet",       0,      0,           3,              2,             5,            9,           7}, //51
+    {"MeanNJetsHT_Zinc2jet",                0,      0,           3,              7,            10,            4,           7},
+    {"MeanNJetsdRapidity_Zinc2jet",         0,      0,           3,              4,             7,            5,           7},
+    {"MeanNJetsdRapidityFB_Zinc2jet",       0,      0,           3,              4,             5,            9,           7}, //51
     
     //--  Name  ------------------------- log - decrease - Mu SVD kterm -  Mu Bayes kterm - E SVD kterm - E Bayes kterm - E Bayes kterm COMBINE
     //{"ZNGoodJets_Zinc",                     1,      1,           4,              4,             4,            3,           7}, //47

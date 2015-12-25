@@ -1577,26 +1577,50 @@ HistoSet::HistoSet(string leptonFlavor)
     MuMinusEta = newTH1D("MuMinusEta","#eta of negative muon","#eta",250,-2.5,2.5);
 
     /// additional MET histograms
-    fullMET                       = newTH1D("MET","MET for all passing leptons","MET for all passing leptons",200,0.,400.);
+
     fullMET_pfMETPFlow            = newTH1D("fullMET_pfMETPFlow","fullMET_pfMETPFlow            for all passing leptons","MET for all passing leptons",200,0.,400.);
     fullMET_pfMet                 = newTH1D("fullMET_pfMet","fullMET_pfMet                 for all passing leptons","MET for all passing leptons",200,0.,400.);
     fullMET_pfType1CorrectedMet   = newTH1D("fullMET_pfType1CorrectedMet","fullMET_pfType1CorrectedMet   for all passing leptons","MET for all passing leptons",200,0.,400.);
     fullMET_pfType1p2CorrectedMet = newTH1D("fullMET_pfType1p2CorrectedMet","fullMET_pfType1p2CorrectedMet for all passing leptons","MET for all passing leptons",200,0.,400.);
-    fullMT          = newTH1D("MT" ,"MT for all passing leptons" ,"MT for all passing leptons",200,0.,400.);
-    METvslepIso     = newTH2D("MET vs lep Iso" ,"MET vs leptons Iso for all passing lepton",100,0.,300.,100, 0., 1 );
-    MTvslepIso      = newTH2D("MT vs lep Iso" ,"MT vs leptons Iso for all passing lepton",100,0.,300.,100, 0., 1 );
     
-    MET_Zinc0jet                      = newTH1D("MET_Zinc0jet",                      "MET (N_{jets} #geq 0)",  "MET [GeV]",      200,0.,400 );
+    fullMT          = newTH1D("MT" ,"MT for all passing leptons" ,"MT for all passing leptons",200,0.,400.);
+    fullMET         = newTH1D("MET","MET for all passing leptons","MET for all passing leptons",200,0.,400.);
+    fullgenMT       = newTH1D("genMT" ,"genMT for all passing leptons" ,"genMT for all passing leptons",200,0.,400.);
+    fullgenMET      = newTH1D("genMET","genMET for all passing leptons","genMET for all passing leptons",200,0.,400.);
+    
+    full2DMT        = newTH2D("full2DMT",      "MT 2D Gen vs Reco", 200, 0., 400., 200, 0., 400.);
+    full2DMET       = newTH2D("full2DMET",    "MET 2D Gen vs Reco", 200, 0., 400., 200, 0., 400.);
+    full2DMTdiff    = newTH2D("full2DMTdiff", "2D (recoMT-genMT) vs GenMT", 200, 0., 400., 400, -400., 400.);
+    
+    
+    full2DCalMT     = newTH2D("full2DCalMT", "MT 2D CalGen vs Reco", 200, 0., 400., 200, 0., 400.);
+    genMETRatio     = newTH1D("genMETRatio", "ratio Nu to cal genMET" ,"ratio nu to cal genMET", 40, -2., 2.);
+    
+    METvslepIso     = newTH2D("MET vs lep Iso" ,"MET vs leptons Iso for all passing lepton",100,0.,300.,1000, 0., 1 );
+    MTvslepIso      = newTH2D("MT vs lep Iso" ,"MT vs leptons Iso for all passing lepton",100,0.,300.,1000, 0., 1 );
+    
+    MET_Zinc0jet           = newTH1D("MET_Zinc0jet",                 "MET (N_{jets} #geq 0)",     "MET [GeV]",      200, 0., 400 );
+    genMET_Zinc0jet        = newTH1D("genMET_Zinc0jet",          "gen MET (N_{jets} #geq 0)",  "genMET [GeV]",      200, 0., 400 );
+    hresponseMET_Zinc0jet  = newTH2D("hresponseMET_Zinc0jet",  "hresp MET (N_{jets} #geq 0)",         200, 0., 400, 200, 0., 400 );
+    
+    MT_Zinc0jet            = newTH1D("MT_Zinc0jet",                   "MT (N_{jets} #geq 0)",    "MT [GeV]",  200, 0., 400);
+    genMT_Zinc0jet         = newTH1D("genMT_Zinc0jet",            "gen MT (N_{jets} #geq 0)",    "MT [GeV]",  200, 0., 400);
+    hresponseMT_Zinc0jet   = newTH2D("hresponseMT_Zinc0jet",    "hresp MT (N_{jets} #geq 0)",   200, 0., 400, 200, 0., 400);
+    
+    dphiLep1Lep2Full    = newTH1D("dphiLep1Lep2Full",         "#Delta#phi btwn muon and MET",     ldPhi,     50, 0, PI);
+    gendphiLep1Lep2Full = newTH1D("gendphiLep1Lep2Full",  "gen #Delta#phi btwn muon and MET",     ldPhi,     50, 0, PI);
+    dphi2DLep1Lep2Full  = newTH2D("dphi2DLep1Lep2Full",    "2D #Delta#phi btwn muon and MET", 50,  0, PI, 50,  0, PI);
+    
+    
     MET_Zinc1jet                      = newTH1D("MET_Zinc1jet",                      "MET (N_{jets} #geq 1)",  "MET [GeV]",      200,0.,400 );
     MET_Zinc2jet                      = newTH1D("MET_Zinc2jet",                      "MET (N_{jets} #geq 2)",  "MET [GeV]",      200,0.,400 );
     MET_Zinc3jet                      = newTH1D("MET_Zinc3jet",                      "MET (N_{jets} #geq 3)",  "MET [GeV]",      200,0.,400 );
-
+    
     METphi_Zinc0jet                      = newTH1D("METphi_Zinc0jet",                      "MET #phi (N_{jets} #geq 0)",  "#phi(MET)",      100,-PI ,PI );
     METphi_Zinc1jet                      = newTH1D("METphi_Zinc1jet",                      "MET #phi (N_{jets} #geq 1)",  "#phi(MET)",      100,-PI ,PI );
     METphi_Zinc2jet                      = newTH1D("METphi_Zinc2jet",                      "MET #phi (N_{jets} #geq 2)",  "#phi(MET)",      100,-PI ,PI );
     METphi_Zinc3jet                      = newTH1D("METphi_Zinc3jet",                      "MET #phi (N_{jets} #geq 3)",  "#phi(MET)",      100,-PI ,PI );
-
-    MT_Zinc0jet                      = newTH1D("MT_Zinc0jet",                      "MT (N_{jets} #geq 0)",    "MT [GeV]",    200,0.,400 );
+    
     MT_Zinc1jet                      = newTH1D("MT_Zinc1jet",                      "MT (N_{jets} #geq 1)",    "MT [GeV]",    200,0.,400 );
     MT_Zinc2jet                      = newTH1D("MT_Zinc2jet",                      "MT (N_{jets} #geq 2)",    "MT [GeV]",    200,0.,400 );
     MT_Zinc3jet                      = newTH1D("MT_Zinc3jet",                      "MT (N_{jets} #geq 3)",    "MT [GeV]",    200,0.,400 );

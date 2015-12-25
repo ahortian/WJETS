@@ -491,7 +491,41 @@ public:
     TH1D *genMeanNJetsdRapidityFB_1D_Zinc2jet;
     //***************************** end additional plots *****************************//
 
+    //---- MT and MET ------------
+    TH1D *MT_Zinc0jet;
+    TH1D *genMT_Zinc0jet;
+    TH2D *hresponseMT_Zinc0jet;
+    
+    TH1D *MET_Zinc0jet;
+    TH1D *genMET_Zinc0jet;
+    TH2D *hresponseMET_Zinc0jet;
 
+    TH2D *full2DMT; // MT before MT cut
+    TH2D *full2DMET; // MET before MT cut
+    TH2D *full2DMTdiff; // recoMT-genMT vs genMT
+    
+    TH2D *full2DCalMT;
+    TH1D *genMETRatio; // ratio genNeutrino to MET before MT cut
+    
+    TH1D *fullMT;
+    TH1D *fullMET;
+    
+    TH1D *fullgenMT;
+    TH1D *fullgenMET;
+    
+    TH1D *dphiLep1Lep2Full;
+    TH1D *gendphiLep1Lep2Full;
+    TH2D *dphi2DLep1Lep2Full;
+    
+    TH2D *METvslepIso;
+    TH2D *MTvslepIso;
+
+    //----------------------------
+    
+    TH1D *MT_Zinc1jet;
+    TH1D *MT_Zinc2jet;
+    TH1D *MT_Zinc3jet;
+    
     TH1D *NumberPFcandidates;
     TH1D *ZMass_lowDeltaR;
 
@@ -1074,14 +1108,12 @@ public:
     TH1D *FourthJetdEtaGenReco_Zinc4; 
     TH2D *puMVAvsBeta;
     TH1D *PUWeight;
-    TH1D *fullMET;
+    
     TH1D *fullMET_pfMETPFlow;
     TH1D *fullMET_pfMet;
     TH1D *fullMET_pfType1CorrectedMet;
     TH1D *fullMET_pfType1p2CorrectedMet;
-    TH1D *fullMT;
-    TH2D *METvslepIso;
-    TH2D *MTvslepIso;
+    
     TH1D *PUWeight0;
     TH1D *PUWeight1;
     TH1D *MuPlusPt;
@@ -1089,7 +1121,7 @@ public:
     TH1D *MuPlusEta;
     TH1D *MuMinusEta;
 
-    TH1D *MET_Zinc0jet;
+    
     TH1D *MET_Zinc1jet;
     TH1D *MET_Zinc2jet;
     TH1D *MET_Zinc3jet;
@@ -1099,10 +1131,6 @@ public:
     TH1D *METphi_Zinc2jet;
     TH1D *METphi_Zinc3jet;
 
-    TH1D *MT_Zinc0jet;
-    TH1D *MT_Zinc1jet;
-    TH1D *MT_Zinc2jet;
-    TH1D *MT_Zinc3jet;
     TH1D *ZNGoodJetsEWK_Zexc;
     TH1D *ZNGoodJetsEWKbtw_Zexc;
     TH1D *METEWK_Zinc2jet;      
