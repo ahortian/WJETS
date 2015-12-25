@@ -25,20 +25,37 @@
         PlottingEdit(43, 48);
         */
         
-        // plot some distributions with NPTB SF
+//        // plot some distributions with NPTB SF : paper v6
+//        PlottingEdit( 0,  1, true, true);
+//       
+//        PlottingEdit( 1,  4, true, true);
+//        PlottingEdit( 4,  6, false, true);
+//        
+//        PlottingEdit(11, 13, true, true);
+//        PlottingEdit(13, 16, false, true);
+//        
+//        PlottingEdit(21, 23, true, true);
+//        PlottingEdit(23, 26, false, true);
+//        
+//        PlottingEdit(26, 43, false, true);
+//        PlottingEdit(43, 48, false, true);
         
+        
+        //--- plot all distributions with NPTB SF
         PlottingEdit( 0,  1, true, true);
+        
         PlottingEdit( 1,  4, true, true);
-        PlottingEdit( 4,  6, false, true);
+        PlottingEdit( 4,  6, true, true);
         
         PlottingEdit(11, 13, true, true);
-        PlottingEdit(13, 16, false, true);
+        PlottingEdit(13, 16, true, true);
         
         PlottingEdit(21, 23, true, true);
-        PlottingEdit(23, 26, false, true);
+        PlottingEdit(23, 26, true, true);
         
-        PlottingEdit(26, 43, false, true);
-        PlottingEdit(43, 48, false, true);
+        PlottingEdit(26, 43, true, true);
+        PlottingEdit(43, 48, true, true);
+        
         
         
         //--- clean the *_cc.d and *_cc.so files ---

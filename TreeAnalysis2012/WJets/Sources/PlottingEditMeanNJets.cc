@@ -308,9 +308,11 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
             TFile *fscale = new TFile(("PNGFiles/BlackHatPDFs/PDFUncer_scale_vary_" + variable + "_histograms.root").c_str());
             
             //cout << "line th " << __LINE__ << endl;
-            BHpdfsUpALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_up");
+            //BHpdfsUpALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_up");
+            BHpdfsUpALL = (TH1D*) fPDFs->Get("CT10_pdfs_vary_up");
             //cout << "line th " << __LINE__ << endl;
-            BHpdfsDnALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_down");
+            //BHpdfsDnALL = (TH1D*) fPDFs->Get("NNPDF23_nlo_as_0119_pdfs_vary_down");
+            BHpdfsDnALL = (TH1D*) fPDFs->Get("CT10_pdfs_vary_down");
             //cout << "line th " << __LINE__ << endl;
             BHscaleUpALL = (TH1D*) fscale->Get("CT10_scale_vary_up");
             BHscaleDnALL = (TH1D*) fscale->Get("CT10_scale_vary_down");
@@ -355,6 +357,22 @@ void FuncPlot(string variable, bool logZ, bool decrease, string varRivetName, st
         
     }
     //------------------------
+    
+    //--- Get Hadronization correction for BH ------
+    bool doNPTB(true);
+    if (doNPTB){
+        TFile *fHCorr = new TFile("PNGFiles/BlackHat/BHatHadronizeCorr.root");
+        cout << " Opening: " << "BHatHadronizeCorr.root" << "   --->   Opened ? " << fHCorr->IsOpen() << endl;
+        string hname = "hadSF_" + variable;
+        //FIX THIS WHEN YOU ARE READY !!!
+        if(variable == "ZNGoodJets_Zexc" || variable == "ZNGoodJetsFull_Zexc") hname ="hadSF_ZNGoodJetsFull_Zexc";
+        
+        TH1D *hisHCorr = (TH1D*) fHCorr->Get(hname.c_str());
+        cout << "got fHCorr: " << hname << " : " << hisHCorr->Integral() << endl;
+        genBhatALL->Multiply(hisHCorr);
+    }
+    //------------------------
+
     
     
     //------ Get Sherpa ------
