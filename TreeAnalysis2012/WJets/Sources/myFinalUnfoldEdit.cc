@@ -665,6 +665,7 @@ TH1D* Unfold(string unfAlg, RooUnfoldResponse* response, TH1D* hData, TH1D* hSum
     RooUnfold* RObject = NULL;
     TH1D * hDataClone = (TH1D*) hData->Clone();
     hDataClone->Add(hSumBG, -1);
+    setNegBinZero(hDataClone);
     if (unfAlg == "SVD")   RObject = (RooUnfold*) RooUnfold::New( RooUnfold::kSVD,   response, hDataClone, Kterm);
     if (unfAlg == "Bayes") RObject = (RooUnfold*) RooUnfold::New( RooUnfold::kBayes, response, hDataClone, Kterm);
     RObject->SetVerbose(0);
@@ -914,20 +915,13 @@ TH1D* getHistoRespSystematics(string leptonFlavor, string variable, int JetPtMin
     const int nBinsFine(recoMad->GetNbinsX());
     double fwFirst[nBinsFine];
     cout << "----------- calculate scaling factor fw -------------" << endl;
-    string commandFwFile = "mkdir -p SFRespDir";
-    system(commandFwFile.c_str());
-    string fwOutFileName = "SFRespDir/FW_" + variable + ".txt";
-    ofstream fwOutFile (fwOutFileName.c_str());
-    
     for (int i = 1; i <= nBinsFine; i++){
         fwFirst[i] = 1;
         if ((recoMad->GetBinContent(i) > 0) & (measSubBG->Integral() > 0)){
             fwFirst[i] = (measSubBG->GetBinContent(i) / recoMad->GetBinContent(i)) * (recoMad->Integral() / measSubBG->Integral());
         }
         //cout << fwFirst[i] << endl;
-        fwOutFile << fwFirst[i] << endl;
     }
-    fwOutFile.close();
     
     //-- this is fwFirst[i] but set as histogram for plotting
     TH1D *histoFw = (TH1D*) measSubBG->Clone();

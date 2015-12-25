@@ -33,9 +33,9 @@ variableStruct VAROFINTERESTWJETSMEAN[] = {
     //--  Name  ----------------------- log - decrease - Mu SVD kterm - Mu Bayes kterm - E SVD kterm - E Bayes kterm - BayesktermCombine
     
     {"MeanNJetsHT_Zinc1jet",             0,      0,           8,              6,             9,            3,           7},
-    {"MeanNJetsHT_Zinc2jet",             0,      0,          10,              8,            10,            4,           7},
-    {"MeanNJetsdRapidity_Zinc2jet",      0,      0,           7,              3,             7,            5,           7},
-    {"MeanNJetsdRapidityFB_Zinc2jet",    0,      0,           6,              2,             5,            9,           7},
+    {"MeanNJetsHT_Zinc2jet",             0,      0,          10,              7,            10,            4,           7},
+    {"MeanNJetsdRapidity_Zinc2jet",      0,      0,           7,              4,             7,            5,           7},
+    {"MeanNJetsdRapidityFB_Zinc2jet",    0,      0,           6,              4,             5,            9,           7},
 };
 
 TList *LISTOFVAROFINTERESTWJETSMEAN = new TList();
@@ -46,7 +46,6 @@ void makeLISTOFVAROFINTERESTWJETSMEAN(){
     }
 }
 //---
-
 
 void unfoldMeanNJetsFastPlot(string leptonFlavor, string var, bool closureTest)
 {
@@ -175,7 +174,7 @@ void FastPlotsRun(const int *sel, int nsel, string leptonFlavor, string variable
     //myplotManyKterm("Bayes", response, genMad, meas, hBG, nBG, leptonFlavor, variable, logZ, decrease, outputDirectory, outputRootFile, closureTest, true);
     
     //-- draw chi2 of change --------------------------------------------------------
-    myplotChi2OfChange(response, Bayeskterm, meas, hBG, nBG, leptonFlavor, variable, energy, outputDirectory, outputRootFile, closureTest);
+    //myplotChi2OfChange(response, Bayeskterm, meas, hBG, nBG, leptonFlavor, variable, energy, outputDirectory, outputRootFile, closureTest);
     
     //-- close every files ----------------------------------------------------------
     outputRootFile->Close();
@@ -218,6 +217,9 @@ void myplotSelectedMethod2(string method, RooUnfoldResponse *response, TH2D *gen
     for (int i(0); i < nBG; i++) {
         hMeas->Add(hBG[i], -1);
     }
+    // set negative bin to zero
+    setNegBinZero(hMeas);
+    cout << " hMeasSubBG->Integral() " << hMeas->Integral() << endl;
     
     // get number of bins on X axis or Y axis
     int nBinsKterm (0);
@@ -476,9 +478,6 @@ void myplotSelectedMethod2(string method, RooUnfoldResponse *response, TH2D *gen
 }
 
 
-
-
-
 void myplotChi2OfChange(RooUnfoldResponse *response, int kterm, TH2D *hData, TH2D *hBG[], int nBG, string leptonFlavor, string variable, string energy, string outputDirectory, TFile *outputRootFile, bool closureTest, bool save)
 {
     cout << "------ Begin Function to plot chi2 of change ------" << endl;
@@ -566,7 +565,8 @@ void myplotChi2OfChange(RooUnfoldResponse *response, int kterm, TH2D *hData, TH2
 
 TH2D* get2DHisto(TFile *File, string variable){
     TH2D *histo2D = (TH2D*) File->Get(variable.c_str());
-    histo2D->SetDirectory(0);
+    //histo2D->SetDirectory(0);
+    cout << " get histo Integral() " << histo2D->Integral() << endl;
     return histo2D;
 }
 
@@ -576,8 +576,8 @@ TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC, string variable ){
     int nBinsY(hUnfoldedC->GetNbinsY());
     double xmin = hUnfoldedC->GetXaxis()->GetXmin();
     double xmax = hUnfoldedC->GetXaxis()->GetXmax();
-    cout << " nBinsX: " << nBinsX << endl;
-    cout << " nBinsY: " << nBinsY << endl;
+    //cout << " nBinsX: " << nBinsX << endl;
+    //cout << " nBinsY: " << nBinsY << endl;
     
     const double *xBins = new double[nBinsX+1];
     xBins = hUnfoldedC->GetXaxis()->GetXbins()->GetArray();
@@ -621,14 +621,34 @@ TH1D* computeProject1DMeanNJets( TH2D *hUnfoldedC, string variable ){
             }
             errOfMean = sqrt(errOfMean);
         }
+        
+        if (errOfMean ==0) errOfMean = 0.001; //----------- remove this line
+        
         hUnfoldedCMeanJ->SetBinError(i+1, errOfMean);
-        cout << " loop " << i << endl;
+        //cout << " loop " << i << endl;
         
     }
     
     return hUnfoldedCMeanJ;
 
 }
+
+void setNegBinZero(TH2D *histograms2D)
+{
+    int nBinsX(histograms2D->GetNbinsX());
+    int nBinsY(histograms2D->GetNbinsY());
+    
+    for (int i = 1; i <= nBinsX; i++){
+        for(int j = 1; j <= nBinsY; j++){
+            if ( histograms2D->GetBinContent(i,j) < 0 ){
+                histograms2D->SetBinContent(i, j, 0.);
+                histograms2D->SetBinError(i, j, 0.);
+            }
+        }
+    }
+    
+}
+
 
 
 void myplotManyKterm(string method, RooUnfoldResponse *response, TH2D *genMad, TH2D *hData, TH2D *hBG[], int nBG, string leptonFlavor, string variable, bool logZ, bool decrease, string outputDirectory, TFile *outputRootFile, bool closureTest, bool save)
@@ -640,6 +660,9 @@ void myplotManyKterm(string method, RooUnfoldResponse *response, TH2D *genMad, T
     else if (leptonFlavor == "Electron" || leptonFlavor == "SMu") leptonFlavor = "SMu_";
     
     string energy = getEnergy();
+    
+    int color[20] ={ 2,  3,  4,  5,  6,  7,  8,  9, 11, 12,
+        28, 30, 36, 40, 42, 45, 46, 41, 31, 39};
     
     // build "title string" and "name string"
     //TH2D *hMeasTemp = (TH2D*) response->Hmeasured();
@@ -662,6 +685,9 @@ void myplotManyKterm(string method, RooUnfoldResponse *response, TH2D *genMad, T
     for (int i(0); i < nBG; i++) {
         hMeas->Add(hBG[i], -1);
     }
+    // set negative bin to zero
+    setNegBinZero(hMeas);
+
     
     //--- Set graph and Pad ---
     // text to draw
@@ -721,237 +747,224 @@ void myplotManyKterm(string method, RooUnfoldResponse *response, TH2D *genMad, T
     leg->SetFillStyle(0);
     leg->SetBorderSize(0);
     
+//    //--- get number of bins on X axis or Y axis
+//    int nBinsKterm (0);
+//    int nBinsTempX(hMeas->GetNbinsX());
+//    int nBinsTempY(hMeas->GetNbinsY());
+//    if (nBinsTempX <= nBinsTempY) nBinsKterm = nBinsTempX;
+//    else nBinsKterm = nBinsTempY;
+//    cout << " nBinsKTerm: " << nBinsKterm << endl;
     
-    //--- get number of bins on X axis or Y axis
-    int nBinsKterm (0);
-    int nBinsTempX(hMeas->GetNbinsX());
-    int nBinsTempY(hMeas->GetNbinsY());
-    if (nBinsTempX <= nBinsTempY) nBinsKterm = nBinsTempX;
-    else nBinsKterm = nBinsTempY;
-    cout << " nBinsKTerm: " << nBinsKterm << endl;
+    //--- produce projected 1D hist for gen ----
+    TH1D* genMadMeanJ;
+    genMadMeanJ = computeProject1DMeanNJets(gen, variable);
     
     
-    
+    //genMadMeanJ->SetTitle(title.c_str());
+    //genMadMeanJ->GetYaxis()->SetTitleOffset(1.4);
+    //genMadMeanJ->GetXaxis()->SetRangeUser(30, 540);
+    genMadMeanJ->SetLineColor(kBlack);
+    genMadMeanJ->SetLineWidth(2);
+    genMadMeanJ->SetFillStyle(3003);
+    genMadMeanJ->SetFillColor(kGray+2);
+    if (variable == "MeanNJetsdRapidity_Zinc2jet") {
+        genMadMeanJ->SetMaximum(2.45);
+        genMadMeanJ->SetMinimum(2.05);
+    }
+    else genMadMeanJ->SetMaximum(1.2*genMadMeanJ->GetMaximum());
+    genMadMeanJ->DrawCopy("HIST");
+    leg->AddEntry(gen, "MC Gen.", "fl");
+
     
     //--- Looping for producing unfolded plots using varied kterm ---
     
-    for (int kterm = 1; kterm < 8; kterm++){
-        
+    TH1D* htemp_0 = (TH1D*) genMadMeanJ->Clone();
+//    int nJetHT_Zinc1jet(15);
+//    //double jetHT_Zinc1jet[18] = {30, 39, 49, 62, 78, 96, 118, 150, 190, 240, 300, 370, 450, 540, 650, 800, 1000, 1500};
+//    double jetHT_Zinc1jet[16] = {30, 39, 49, 62, 78, 96, 118, 150, 190, 240, 300, 370, 450, 540, 650, 800};
+    
+//    int nJetHT_Zinc2jet(10);
+//    double jetHT_Zinc2jet[11] = {60, 78, 96, 118, 150, 190, 240, 300, 370, 450, 540};
+    TH1D* htemp = NULL;
+    
+//    if (variable == "MeanNJetsHT_Zinc1jet"){
+//        htemp =  (TH1D*) htemp_0->Rebin(nJetHT_Zinc1jet,"htemp", jetHT_Zinc1jet);
+//    }
+//    else if (variable == "MeanNJetsHT_Zinc2jet"){
+//        htemp =  (TH1D*) htemp_0->Rebin(nJetHT_Zinc2jet,"htemp", jetHT_Zinc2jet);
+//    }
+//    else{
+//        htemp =  (TH1D*) genMadMeanJ->Clone();
+//    }
+    
+    htemp =  (TH1D*) genMadMeanJ->Clone();
+    
+    
+    //const int n = genMadMeanJ->GetNbinsX();
+    const int n = htemp->GetNbinsX();
+    TH1D* chi2plot = new TH1D ("chi2plot", "chi2plot", n, 0.5, n+0.5);
+    
+    for (int kterm = 1; kterm < genMadMeanJ->GetNbinsX(); kterm++){
+    //for (int kterm = 1; kterm < 10; kterm++){
         // unfolding
         TH2D *hUnfoldedC = NULL;
         if (method == "Bayes") {
             RooUnfoldBayes unfoldC(response, hMeas, kterm);
-            //unfoldC.SetVerbose(0);
+            unfoldC.SetVerbose(0);
             hUnfoldedC = (TH2D*) unfoldC.Hreco();
         }
         
-        //--- produce projected 1D hist for hUnfoldedC
-        //--- get Xaxis Title ---
-        //const char *xTitle = hData->GetXaxis()->GetTitle();
-        int nBinsX(hUnfoldedC->GetNbinsX());
-        int nBinsY(hUnfoldedC->GetNbinsY());
-        double xmin = hUnfoldedC->GetXaxis()->GetXmin();
-        double xmax = hUnfoldedC->GetXaxis()->GetXmax();
-        cout << " nBinsX: " << nBinsX << endl;
-        const double *xBins = new double[nBinsX+1];
-        xBins = hUnfoldedC->GetXaxis()->GetXbins()->GetArray();
-        
         //--- produce projected 1D hist for hUnfoldedC ---
         TH1D* hUnfoldedCMeanJ;
-        if (xBins == 0) hUnfoldedCMeanJ = new TH1D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax);
-        else hUnfoldedCMeanJ = new TH1D(variable.c_str(), variable.c_str(), nBinsX, xBins);
+        hUnfoldedCMeanJ = computeProject1DMeanNJets(hUnfoldedC, variable);
         
-        for (int i=0; i<nBinsX; i++){
-            // calculate mean # of jets
-            double meanNJets(0);
-            double NEvents(0);
-            double NJetsTot(0);
-            for(int j=0; j<nBinsY; j++){
-                double NEventsTemp(0);
-                double NJetsTemp(0);
-                NEventsTemp = hUnfoldedC->GetBinContent(i+1,j+1);
-                NEvents = NEvents + NEventsTemp;
-                
-                NJetsTemp = (hUnfoldedC->GetBinContent(i+1,j+1)) * (j+1);
-                NJetsTot = NJetsTot + NJetsTemp;
-            }
-            if (NEvents > 0) meanNJets = NJetsTot/NEvents;
-            //else meanNJets = 0;
-            hUnfoldedCMeanJ->SetBinContent(i+1, meanNJets);
-            
-            // calculate error
-            double errOfMean(0);
-            if (NEvents > 0) {
-                for(int k=0; k<nBinsY; k++){
-                    double errTemp(0);
-                    errTemp = (((NEvents * (k+1)) - NJetsTot) / pow(NEvents, 2)) * (hUnfoldedC->GetBinError(i+1,k+1));
-                    errTemp = pow(errTemp, 2);
-                    errOfMean = errOfMean + errTemp;
-                }
-                errOfMean = sqrt(errOfMean);
-            }
-            hUnfoldedCMeanJ->SetBinError(i+1, errOfMean);
-            cout << " loop C " << i << endl;
-            
-        }
+        TH1D *hNewtemp_0 = (TH1D*) hUnfoldedCMeanJ->Clone();
         
-        //--- produce projected 1D hist for gen ----
-        if (kterm == 1){
-            TH1D* genMadMeanJ;
-            if (xBins == 0) genMadMeanJ = new TH1D(variable.c_str(), variable.c_str(), nBinsX, xmin, xmax);
-            else genMadMeanJ = new TH1D(variable.c_str(), variable.c_str(), nBinsX, xBins);
-            
-            for (int i=0; i<nBinsX; i++){
-                // calculate mean # of jets
-                double meanNJets_W(0);
-                double NEvents_W(0);
-                double NJetsTot_W(0);
-                for(int j=0; j<nBinsY; j++){
-                    double NJetsTemp_W(0);
-                    double NEventsTemp_W(0);
-                    NEventsTemp_W = gen->GetBinContent(i+1,j+1);
-                    NEvents_W = NEvents_W + NEventsTemp_W;
-                    
-                    NJetsTemp_W = (gen->GetBinContent(i+1,j+1)) * (j+1);
-                    NJetsTot_W = NJetsTot_W + NJetsTemp_W;
-                }
-                if (NEvents_W > 0) meanNJets_W = NJetsTot_W/NEvents_W;
-                //else meanNJets_W = 0;
-                genMadMeanJ->SetBinContent(i+1, meanNJets_W);
-                
-                // calculate error
-                double errOfMean_W(0);
-                if (NEvents_W > 0) {
-                    for(int k=0; k<nBinsY; k++){
-                        double errTemp_W(0);
-                        errTemp_W = (((NEvents_W * (k+1)) - NJetsTot_W) / pow(NEvents_W, 2)) * (gen->GetBinError(i+1,k+1));
-                        errTemp_W = pow(errTemp_W, 2);
-                        errOfMean_W = errOfMean_W + errTemp_W;
-                    }
-                    errOfMean_W = sqrt(errOfMean_W);
-                }
-                genMadMeanJ->SetBinError(i+1, errOfMean_W);
-                cout << " loop Gen " << i << endl;
-            }
-            
-            //genMadMeanJ->SetTitle(title.c_str());
-            //genMadMeanJ->GetYaxis()->SetTitleOffset(1.4);
-            genMadMeanJ->SetLineColor(kBlack);
-            genMadMeanJ->SetLineWidth(2);
-            genMadMeanJ->SetFillStyle(3003);
-            genMadMeanJ->SetFillColor(kGray+2);
-            if (variable == "MeanNJetsdRapidity_Zinc2jet") {
-                genMadMeanJ->SetMaximum(2.45);
-                genMadMeanJ->SetMinimum(2.05);
-            }
-            else genMadMeanJ->SetMaximum(1.2*genMadMeanJ->GetMaximum());
-            genMadMeanJ->DrawCopy("HIST");
-            
-            leg->AddEntry(gen, "MC Gen.", "fl");
-        }
+        TH1D *hNewtemp = NULL;
+//        if(variable == "MeanNJetsHT_Zinc1jet"){
+//            hNewtemp = (TH1D*) hNewtemp_0->Rebin(nJetHT_Zinc1jet,"hNewtemp", jetHT_Zinc1jet);
+//        }
+//        else if (variable == "MeanNJetsHT_Zinc2jet"){
+//            hNewtemp = (TH1D*) hNewtemp_0->Rebin(nJetHT_Zinc2jet,"hNewtemp", jetHT_Zinc2jet);
+//        }
+//        else{
+//            hNewtemp = (TH1D*) hUnfoldedCMeanJ->Clone();
+//        }
+
+        hNewtemp = (TH1D*) hUnfoldedCMeanJ->Clone();
         
+//        hUnfoldedCMeanJ->SetMarkerStyle(24);
+//        hUnfoldedCMeanJ->SetMarkerColor(color[kterm-1]);
+//        hUnfoldedCMeanJ->SetLineColor(color[kterm-1]);
+//        hUnfoldedCMeanJ->SetLineWidth(2);
+//        pad1->cd();
+//        hUnfoldedCMeanJ->DrawCopy("hist same");
         
-        hUnfoldedCMeanJ->SetMarkerStyle(24);
-        hUnfoldedCMeanJ->SetMarkerColor(kterm+1);
-        hUnfoldedCMeanJ->SetLineColor(kterm+1);
-        hUnfoldedCMeanJ->SetLineWidth(2);
-        hUnfoldedCMeanJ->DrawCopy("E1same");
+        hNewtemp->SetMarkerStyle(24);
+        hNewtemp->SetMarkerColor(color[kterm-1]);
+        hNewtemp->SetLineColor(color[kterm-1]);
+        hNewtemp->SetLineWidth(2);
+        pad1->cd();
+        hNewtemp->DrawCopy("hist same");
+
         
-        //if (kterm < 1) kterm = 2;
         ostringstream ktermStr; ktermStr << kterm;
         string legEntry = "kTerm = " + ktermStr.str();
-        leg->AddEntry(hUnfoldedCMeanJ, legEntry.c_str(), "pl");
+        //leg->AddEntry(hUnfoldedCMeanJ, legEntry.c_str(), "pl");
+        leg->AddEntry(hNewtemp, legEntry.c_str(), "pl");
+        
+        Double_t res[n];
+        
+        //cout << " hNewtemp->GetNbinsX() "  << hNewtemp->GetNbinsX() << " htemp->GetNbinsX() " << htemp->GetNbinsX() << endl;
+        double chi2 = htemp->Chi2Test(hNewtemp,"WW,P,CHI2/NDF",res);
+        chi2plot->SetBinContent(kterm, chi2);
+        htemp = (TH1D*) hNewtemp->Clone();
         
     }
     //--- End Looping -----------------------------------------------
     
     
-    
     leg->Draw();
     pad1->Draw();
     canUnfoldedDistribution->cd();
-    /*
-     TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
-     pad2->SetTopMargin(0);
-     pad2->SetBottomMargin(0.3);
-     pad2->SetRightMargin(0.04);
-     //pad2->SetRightMargin(0.02);
-     pad2->SetTicks();
-     pad2->SetGridy();
-     pad2->Draw();
-     pad2->cd();
-     
-     //--- want to plot Gen/Unfolded ---
-     hUnfoldedCMeanJ->Divide(genMadMeanJ);
-     
-     if (kterm > 1 && method != "BinByBin") hUnfoldedDMeanJ->Divide(genMadMeanJ);
-     if (kterm < nBinsKterm && method != "BinByBin") hUnfoldedUMeanJ->Divide(genMadMeanJ);
-     
-     hUnfoldedCMeanJ->SetTitle("");
-     hUnfoldedCMeanJ->GetXaxis()->SetTickLength(0.03);
-     hUnfoldedCMeanJ->GetXaxis()->SetTitleSize(0.1);
-     hUnfoldedCMeanJ->GetXaxis()->SetLabelSize(0.1);
-     hUnfoldedCMeanJ->GetXaxis()->SetLabelOffset(0.018);
-     hUnfoldedCMeanJ->GetXaxis()->SetTitleOffset(1.2);
-     //hUnfoldedCMeanJ->GetYaxis()->SetRangeUser(0.51, 1.49);
-     hUnfoldedCMeanJ->GetYaxis()->SetRangeUser(0.78, 1.22);
-     hUnfoldedCMeanJ->GetYaxis()->SetNdivisions(5,5,0);
-     
-     if (!closureTest) {
-     hUnfoldedCMeanJ->GetYaxis()->SetTitle("Gen / Unfolded");
-     hUnfoldedCMeanJ->GetYaxis()->SetTitleSize(0.1);
-     hUnfoldedCMeanJ->GetYaxis()->SetTitleOffset(0.5);
-     }
-     else {
-     hUnfoldedCMeanJ->GetYaxis()->SetTitle("Gen. / Unf. C.T.");
-     hUnfoldedCMeanJ->GetYaxis()->SetTitleSize(0.07);
-     hUnfoldedCMeanJ->GetYaxis()->SetTitleOffset(0.7);
-     }
-     hUnfoldedCMeanJ->GetYaxis()->CenterTitle();
-     hUnfoldedCMeanJ->GetYaxis()->SetLabelSize(0.08);
-     
-     for (int j(1); j <= nBinsX; j++){
-     double content(hUnfoldedCMeanJ->GetBinContent(j));
-     double contentErr(hUnfoldedCMeanJ->GetBinError(j));
-     if (content > 0){
-     hUnfoldedCMeanJ->SetBinContent(j, 1./content);
-     hUnfoldedCMeanJ->SetBinError(j, contentErr/(content * content));
-     }
-     
-     if(method != "BinByBin"){
-     if (kterm > 1){
-     content = (hUnfoldedDMeanJ->GetBinContent(j));
-     contentErr = (hUnfoldedDMeanJ->GetBinError(j));
-     if (content > 0){
-     hUnfoldedDMeanJ->SetBinContent(j, 1./content);
-     hUnfoldedDMeanJ->SetBinError(j, contentErr/(content * content));
-     }
-     }
-     if (kterm < nBinsKterm){
-     content = (hUnfoldedUMeanJ->GetBinContent(j));
-     contentErr = (hUnfoldedUMeanJ->GetBinError(j));
-     if (content > 0){
-     hUnfoldedUMeanJ->SetBinContent(j, 1./content);
-     hUnfoldedUMeanJ->SetBinError(j, contentErr/(content * content));
-     }
-     }
-     }
-     }
-     hUnfoldedCMeanJ->DrawCopy("E1");
-     
-     if (kterm > 1 && method != "BinByBin") hUnfoldedDMeanJ->DrawCopy("E1same");
-     if (kterm < nBinsKterm && method != "BinByBin") hUnfoldedUMeanJ->DrawCopy("E1same");
-     
-     pad2->Draw();
-     */
     
-    string outputFileNamePNG = outputDirectory + name.c_str() + "AllKterm" + ".pdf";
+    TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.3);
+    pad2->SetRightMargin(0.04);
+    //pad2->SetRightMargin(0.02);
+    pad2->SetTicks();
+    pad2->SetGridy();
+    pad2->SetLogy();
+    pad2->Draw();
+    pad2->cd();
+
+    for (int kterm = 1; kterm < genMadMeanJ->GetNbinsX(); kterm++){
+    //for (int kterm = 1; kterm < 10; kterm++){
+        // unfolding
+        TH2D *hUnfoldedC = NULL;
+        if (method == "Bayes") {
+            RooUnfoldBayes unfoldC(response, hMeas, kterm);
+            unfoldC.SetVerbose(0);
+            hUnfoldedC = (TH2D*) unfoldC.Hreco();
+        }
+        
+        //--- produce projected 1D hist for hUnfoldedC ---
+        TH1D* hUnfoldedCMeanJ;
+        hUnfoldedCMeanJ = computeProject1DMeanNJets(hUnfoldedC, variable);
+
+        for (int j(1); j <= hUnfoldedCMeanJ->GetNbinsX(); j++){
+            hUnfoldedCMeanJ->SetBinContent(j, hUnfoldedCMeanJ->GetBinError(j));
+        }
+            
+//        //--- want to plot Gen/Unfolded ---
+//        hUnfoldedCMeanJ->Divide(genMadMeanJ);
+//        
+        hUnfoldedCMeanJ->SetTitle("");
+        hUnfoldedCMeanJ->GetXaxis()->SetTickLength(0.03);
+        hUnfoldedCMeanJ->GetXaxis()->SetTitleSize(0.1);
+        hUnfoldedCMeanJ->GetXaxis()->SetLabelSize(0.1);
+        hUnfoldedCMeanJ->GetXaxis()->SetLabelOffset(0.018);
+        hUnfoldedCMeanJ->GetXaxis()->SetTitleOffset(1.2);
+        //hUnfoldedCMeanJ->GetYaxis()->SetRangeUser(0.51, 1.49);
+        hUnfoldedCMeanJ->GetYaxis()->SetRangeUser(0.00001, 100);
+        hUnfoldedCMeanJ->GetYaxis()->SetNdivisions(5,5,0);
+//
+//        if (!closureTest) {
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitle("Gen / Unfolded");
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitleSize(0.1);
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitleOffset(0.5);
+//        }
+//        else {
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitle("Gen. / Unf. C.T.");
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitleSize(0.07);
+//            hUnfoldedCMeanJ->GetYaxis()->SetTitleOffset(0.7);
+//        }
+//        hUnfoldedCMeanJ->GetYaxis()->CenterTitle();
+//        hUnfoldedCMeanJ->GetYaxis()->SetLabelSize(0.08);
+//        
+//        for (int j(1); j <= hUnfoldedCMeanJ->GetNbinsX(); j++){
+//            double content(hUnfoldedCMeanJ->GetBinContent(j));
+//            double contentErr(hUnfoldedCMeanJ->GetBinError(j));
+//            if (content > 0){
+//                hUnfoldedCMeanJ->SetBinContent(j, 1./content);
+//                hUnfoldedCMeanJ->SetBinError(j, contentErr/(content * content));
+//            }
+//        }
+        
+        hUnfoldedCMeanJ->SetMarkerStyle(24);
+        hUnfoldedCMeanJ->SetMarkerColor(color[kterm-1]);
+        hUnfoldedCMeanJ->SetLineColor(color[kterm-1]);
+        hUnfoldedCMeanJ->SetLineWidth(2);
+
+        
+        pad2->cd();
+//        if (kterm == 1) hUnfoldedCMeanJ->DrawCopy("E1");
+//        else hUnfoldedCMeanJ->DrawCopy("E1 same");
+        if (kterm == 1) hUnfoldedCMeanJ->DrawCopy("hist");
+        else hUnfoldedCMeanJ->DrawCopy("hist same");
+
+
+    }
+    pad2->Draw();
+    canUnfoldedDistribution->cd();
+    
+    
+    string outputFileNamePNG = outputDirectory + name.c_str() + "_AllKterm" + ".pdf";
     if (save){
         canUnfoldedDistribution->Print(outputFileNamePNG.c_str());
         outputRootFile->cd();
         canUnfoldedDistribution->Write();
+        chi2plot->Write("chi2plot");
     }
     
 }
+
+
+
+
+
+
+
 
 

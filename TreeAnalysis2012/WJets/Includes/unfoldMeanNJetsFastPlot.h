@@ -20,4 +20,6 @@ TH2D* get2DHisto(TFile *File, string variable);
 
 TH1D* computeProject1DMeanNJets(TH2D *hUnfoldedC, string variable);
 
+void setNegBinZero(TH2D *histograms2D);
+
 #endif

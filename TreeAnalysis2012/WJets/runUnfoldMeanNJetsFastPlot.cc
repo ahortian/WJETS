@@ -16,16 +16,16 @@
         gROOT->ProcessLine(string(".L " + srcdir + sources[i] + ".cc++").c_str());
         }
         
-        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc1jet", true);
+//        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc1jet", true);
         unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc1jet", false);
         
-        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc2jet", true);
+//        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc2jet", true);
         unfoldMeanNJetsFastPlot("SMu", "MeanNJetsHT_Zinc2jet", false);
-        
-        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidity_Zinc2jet", true);
+//        
+//        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidity_Zinc2jet", true);
         unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidity_Zinc2jet", false);
-        
-        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidityFB_Zinc2jet", true);
+//        
+//        unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidityFB_Zinc2jet", true);
         unfoldMeanNJetsFastPlot("SMu", "MeanNJetsdRapidityFB_Zinc2jet", false);
         
         
